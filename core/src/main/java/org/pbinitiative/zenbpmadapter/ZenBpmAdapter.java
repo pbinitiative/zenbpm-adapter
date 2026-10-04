@@ -16,7 +16,7 @@ public final class ZenBpmAdapter {
    * type, the id itself is read as the type. So an application with one ZenBPM engine can
    * name its adapter id {@code zenbpm} and set nothing else.
    */
-  public static final String ADAPTER_TYPE = "zenbpm";
+public    static final String ADAPTER_TYPE="zenbpm";
 
   private ZenBpmAdapter() {
     // constants holder
