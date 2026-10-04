@@ -22,6 +22,12 @@
       <comments>Files adapted from the VanillaBP adapters keep the Apache License, Version 2.0, see NOTICE and decision 17 in the repository's DECISIONS.md.</comments>
     </license>
   </licenses>
+  <!-- One entry on purpose: Maven reads several <license> entries as alternatives a user may
+       choose between, and "MIT or Apache 2.0" would be wrong for an adapted file. While no
+       adapted file ships in a published jar (today only test classes are adapted), MIT is
+       also the whole truth. The first story which copies production code from a VanillaBP
+       adapter decides how the published POMs say "MIT and Apache 2.0"; the jars already
+       carry both licence texts and the NOTICE, see <resources> below. -->
 
   <developers>
     <developer>
@@ -166,6 +172,26 @@
   </dependencyManagement>
 
   <build>
+    <!-- Both licence texts and the NOTICE go into META-INF/ of every jar and every sources
+         jar, because Apache 2.0 asks for them wherever adapted code is redistributed, and an
+         artifact travels without the repository around it. As a resource rather than a copy
+         step, because the sources jar packs the declared resources only. A module which
+         declares <resources> of its own (core, for filtering) repeats this entry.
+         PublishedJarsTest in the coverage gate checks the archives. -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <targetPath>META-INF</targetPath>
+        <directory>${maven.multiModuleProjectDirectory}</directory>
+        <includes>
+          <include>LICENSE</include>
+          <include>LICENSE-APACHE-2.0</include>
+          <include>NOTICE</include>
+        </includes>
+      </resource>
+    </resources>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -371,7 +397,7 @@
               <exclude>**/.github/**/</exclude>
               <!-- copies of the engine's API contract, kept byte for byte as the engine
                    wrote them -->
-              <exclude>core/src/main/zenbpm/**</exclude>
+              <exclude>**/src/main/zenbpm/**</exclude>
             </excludes>
             <jackson>
               <yamlFeatures>

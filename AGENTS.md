@@ -91,6 +91,16 @@ gh pr list --state open
 gh pr diff <n> | grep -E '^\+### [0-9]+\. '                    # for each open pull request
 ```
 
+If your number is taken, your entry gets the next free one, and you correct every citation of it in
+the code and in the documentation of your branch. Read each citation before you change it: not
+every `see decision <n>` in the branch is about your decision. A branch can cite a number somebody
+else handed out long ago, and that citation stays as it is, so a search and replace over the branch
+turns a right reference into a wrong one.
+
+None of this breaks the rule that a number is never renumbered. That rule is about a merged number,
+which a citation in a released artifact points at. Until the pull request is merged, nothing outside
+the branch has seen the number, so correcting it costs no more than the branch.
+
 ## What code may point at
 
 Nothing which a later change can invalidate without anything noticing: no story or prompt number,

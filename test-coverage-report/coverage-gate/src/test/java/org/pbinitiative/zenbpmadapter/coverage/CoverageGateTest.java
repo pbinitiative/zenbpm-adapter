@@ -68,9 +68,9 @@ public class CoverageGateTest {
           ROOT.resolve("test-coverage-report/quarkus/pom.xml"));
 
   /**
-   * Modules whose execution data belongs to no coverage report. Each entry is a
-   * decision - a module missing here and missing from both aggregates is the defect
-   * this test exists for.
+   * Modules whose execution data or production code belongs to no coverage report. Each
+   * entry is a decision - a module missing here and missing from the aggregate of its
+   * platform is the defect this test exists for.
    */
   private static final Set<String> DELIBERATELY_NOT_AGGREGATED = Set.of();
 
@@ -82,6 +82,25 @@ public class CoverageGateTest {
         .modulesMissingFromAggregates(ROOT, AGGREGATE_POMS, DELIBERATELY_NOT_AGGREGATED);
 
     assertTrue(missing.isEmpty(), () -> CoverageGate.describeMissingModules(missing, AGGREGATE_POMS));
+
+  }
+
+  /**
+   * The check above finds a module by its execution data, so it never sees a production
+   * module without tests. Left out of its report, such a module empties the report instead of
+   * failing it. This one decides by the directory layout, see {@link ProductionModules}.
+   */
+  @Test
+  @DisplayName("Every production module is read by the report of its platform")
+  public void everyProductionModuleIsReadByTheReportOfItsPlatform() {
+
+    final var springBoot = new ProductionModules.Report("Spring Boot", AGGREGATE_POMS.get(0));
+    final var quarkus = new ProductionModules.Report("Quarkus", AGGREGATE_POMS.get(1));
+
+    final var missing = ProductionModules
+        .missingFromTheReportOfTheirPlatform(ROOT, springBoot, quarkus, DELIBERATELY_NOT_AGGREGATED);
+
+    assertTrue(missing.isEmpty(), () -> ProductionModules.describe(missing, springBoot, quarkus));
 
   }
 
@@ -107,9 +126,11 @@ public class CoverageGateTest {
    * loud about it: the line is printed and the test is reported as skipped, so nobody
    * reads a green run as a checked one.
    * <p>
-   * A report which holds no instruction at all passes and says so. That is a repository
-   * whose modules compile no code yet, and a percentage of nothing is no measurement: read
-   * as 0 % it would fail a build which has no test to write.
+   * A report which holds no instruction at all is skipped the same way. A percentage of
+   * nothing is no measurement: read as 0 % it would fail a build which has no test to write,
+   * and passed it would read as checked. That is a repository whose modules compile no code
+   * yet, or later an aggregate which lost all its modules; either way the skipped test shows
+   * that nothing was measured.
    * <p>
    * The threshold is read per platform, because a report exists per platform. Both
    * properties hold the same 85 in every VanillaBP repository, and that number is the
@@ -138,13 +159,9 @@ public class CoverageGateTest {
             CoverageGate.Metric.INSTRUCTIONS);
 
     if ((coverage.missed() + coverage.covered()) == 0) {
-      System.out
-          .println(
-              "coverage gate | %s | %s"
-                  .formatted(
-                      platform,
-                      "no instruction to measure yet, so nothing can be below the threshold"));
-      return;
+      final var reason = "the report holds no instruction, so there is no coverage to check";
+      System.out.println("coverage gate | %s | %s".formatted(platform, reason));
+      Assumptions.abort(reason);
     }
 
     report(coverage, threshold);

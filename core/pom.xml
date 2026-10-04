@@ -63,6 +63,16 @@
         <filtering>true</filtering>
         <directory>src/main/resources</directory>
       </resource>
+      <!-- repeated from the root POM, which this <resources> replaces -->
+      <resource>
+        <targetPath>META-INF</targetPath>
+        <directory>${maven.multiModuleProjectDirectory}</directory>
+        <includes>
+          <include>LICENSE</include>
+          <include>LICENSE-APACHE-2.0</include>
+          <include>NOTICE</include>
+        </includes>
+      </resource>
     </resources>
   </build>
 </project>

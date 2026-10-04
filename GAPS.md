@@ -2,7 +2,8 @@
 
 What the ZenBPM engine cannot do that VanillaBP's adapter contract asks for, the evidence for it in
 the engine's source (paths relative to the root of `pbinitiative/zenbpm`), and how this adapter
-behaves instead. Users read the same list, one sentence per gap, on the wiki page `Deviations`.
+behaves instead. Once the user documentation is written, users read the same list, one sentence
+per gap, on the wiki page `Deviations`.
 
 The numbers were handed out by the implementation plan in [`docs/`](docs/README.md), so every story
 which meets a gap cites the same number. An entry is added here by the story which first makes it

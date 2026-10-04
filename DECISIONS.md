@@ -18,21 +18,21 @@ drafts of the missing ones are in
 ZenBPM is a remote, at-least-once, polling BPMS with a query API, which is the shape the Camunda 8
 adapter was written for. It is NOT built on the Process-Engine-API adapter: no Process-Engine-API
 implementation for ZenBPM exists, the adapter would have had to write one against its own private
-command classes, and every capability the PEA cannot express (finding a workflow, listeners, versions,
-pushing variables, typed failures) is one ZenBPM's REST API offers and the PEA layer would have hidden.
-What is borrowed from the PEA adapter is the raw-XML handling, because a model type of a Camunda
-artifact would tie this adapter to Camunda for no reason.
+command classes, and every capability the PEA cannot express (finding a workflow, listeners,
+versions, pushing variables, typed failures) is one ZenBPM's REST API offers and the PEA layer would
+have hidden. What is borrowed from the PEA adapter is the raw-XML handling, because a model type of
+a Camunda artifact would tie this adapter to Camunda for no reason.
 
 ### 3. The REST client is the adapter's own, the gRPC stubs are generated
 
 The adapter uses about twenty REST endpoints. The official Java client trails the engine by two
-minors, changed its deploy contract with 1.8, and knows nothing about Quarkus; a generated REST client
-would bring a generator into every build and its own reflection into every native image. So the REST
-side is a thin `java.net.http` + Jackson client written against the copy of `openapi/api.yaml` this
-repository pins, with one method per endpoint and one exception carrying the status code. The job
-stream is generated from the pinned `zenbpm.proto`, because that is what protobuf is for. The pinned
-copies name the engine commit they came from, and a test diffs them against the image the
-integration tests run.
+minors, changed its deploy contract with 1.8, and knows nothing about Quarkus; a generated REST
+client would bring a generator into every build and its own reflection into every native image. So
+the REST side is a thin `java.net.http` + Jackson client written against the copy of
+`openapi/api.yaml` this repository pins, with one method per endpoint and one exception carrying the
+status code. The job stream is generated from the pinned `zenbpm.proto`, because that is what
+protobuf is for. The pinned copies name the engine commit they came from, and a test diffs them
+against the image the integration tests run.
 
 ### 13. A class opens its fields one by one, not as a whole
 
@@ -70,15 +70,17 @@ platform with the same gate and rule, `test-utils` in every test, a `DECISIONS.m
 code cites, a user-facing wiki and a contributor-facing README, and configuration under
 `vanillabp.adapters.<id>.*` validated at startup with guiding messages. What differs is what
 ownership decides: the licence, the coordinates (groupId `org.pbinitiative.zenbpm`, packages
-`org.pbinitiative.zenbpmadapter`), the CI and where releases are published. The Go conventions of the engine repository do not reach into this one.
+`org.pbinitiative.zenbpmadapter`), the CI and where releases are published. The Go conventions of
+the engine repository do not reach into this one.
 
 ### 17. Code adapted from the Apache-2.0 adapters keeps its licence and its notice
 
 The repository is MIT-licensed, and a good part of its first version is copied and adapted from
-`camunda8-adapter` and `process-engine-api-adapter`, both Apache 2.0. Apache 2.0 allows that inside an
-MIT project as long as the licence text and the attributions travel with the code, so every adapted
-file keeps its original header, `LICENSE-APACHE-2.0` holds the licence text, and `NOTICE` names the two
-origins. The VanillaBP adapters write no header into their Java files, so an adapted Java file gets
-one naming its origin, that it was adapted, and `SPDX-License-Identifier: Apache-2.0`. A file
-written from scratch carries the MIT header with `SPDX-License-Identifier: MIT`. Which is which is decided when the file is
-created and never changed afterwards, because the origin of a file is a fact and not a preference.
+`camunda8-adapter` and `process-engine-api-adapter`, both Apache 2.0. Apache 2.0 allows that inside
+an MIT project as long as the licence text and the attributions travel with the code, so every
+adapted file keeps any header it had, `LICENSE-APACHE-2.0` holds the licence text, and `NOTICE`
+names the two origins. The VanillaBP adapters write no header into their Java files, so an adapted
+Java file gets one naming its origin, that it was adapted, and
+`SPDX-License-Identifier: Apache-2.0`. A file written from scratch carries the MIT header with
+`SPDX-License-Identifier: MIT`. Which is which is decided when the file is created and never
+changed afterwards, because the origin of a file is a fact and not a preference.
