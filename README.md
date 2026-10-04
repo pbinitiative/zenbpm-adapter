@@ -1,5 +1,6 @@
 # VanillaBP adapter for ZenBPM
 
+[![Checks](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/workflows/checks.yaml/badge.svg?branch=main)](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/workflows/checks.yaml)
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 This is the [VanillaBP](https://www.vanillabp.io) adapter for the
@@ -62,6 +63,21 @@ lifecycle twice. Spotless checks the formatting in every build; `mvn spotless:ap
 Working rules for this repository, for people and coding agents alike, are in
 [`AGENTS.md`](./AGENTS.md). The decisions the code relies on are in [`DECISIONS.md`](./DECISIONS.md),
 what the engine cannot do and how the adapter answers it in [`GAPS.md`](./GAPS.md).
+
+## Contributing
+
+Every pull request and every push to `main` runs `.github/workflows/checks.yaml`: one
+`mvn install`, which is Spotless, compile, javadoc, the tests, both coverage reports and the gate.
+Its job `build` is the check branch protection on `main` requires, so nothing reaches `main`
+without it. On a red run the test and coverage reports are attached to the run as the artifact
+`test-reports`.
+
+The build reads the VanillaBP snapshots from VanillaBP's GitHub Packages, which asks for
+credentials even for public packages, and only accepts a classic personal access token. The two
+repository secrets which carry them are `VANILLABP_PACKAGES_USER` (a GitHub user name) and
+`VANILLABP_PACKAGES_TOKEN` (a classic token of that user with `read:packages` and nothing else);
+`.github/workflows/settings.xml` reads them. They are one maintainer's token today, so they are
+replaced when that maintainer leaves or the token expires.
 
 ## Test coverage
 

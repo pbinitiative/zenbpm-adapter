@@ -1,0 +1,60 @@
+name: Checks
+# The build of every pull request and of every push to main: Spotless, compile, javadoc,
+# the tests, the per-platform coverage reports and the coverage gate, all of it one
+# 'mvn install'. The job 'build' is the check branch protection on main requires.
+"on":
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  # One run per branch, and the newest run wins: nobody reads the answer of a commit
+  # which has been pushed over.
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # the engine image the integration tests start is pulled from ghcr.io, logged in
+      # as this workflow, which keeps the pulls of a busy day under the anonymous limit
+      packages: read
+    steps:
+      - uses: actions/checkout@v7
+      # The build JDK is newer than the Java release the classes are compiled for (21,
+      # 'version.java' in the root POM), as in the VanillaBP repositories this one
+      # builds against.
+      - uses: actions/setup-java@v6
+        with:
+          java-version: 25.0.4+101.0.LTS
+          distribution: temurin
+          cache: maven
+      - name: Log in to the GitHub container registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      # 'install' and not 'install verify': install already runs every phase verify has,
+      # and naming both walks the lifecycle twice.
+      - name: Build and test
+        run: mvn -s $GITHUB_WORKSPACE/.github/workflows/settings.xml
+          --batch-mode --no-transfer-progress --update-snapshots install
+        env:
+          # the VanillaBP snapshots live in VanillaBP's GitHub Packages, see settings.xml
+          VANILLABP_PACKAGES_USER: "${{ secrets.VANILLABP_PACKAGES_USER }}"
+          VANILLABP_PACKAGES_TOKEN: "${{ secrets.VANILLABP_PACKAGES_TOKEN }}"
+      # What a failing test printed is in its report, and Surefire's last line in the log
+      # is never the interesting one. The coverage reports explain a red gate.
+      - name: Upload the reports of a failed build
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/failsafe-reports/**
+            **/target/site/jacoco*/**
+            test-coverage-report/*/report/**
+          retention-days: 7
+          if-no-files-found: ignore
