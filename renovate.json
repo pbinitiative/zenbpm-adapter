@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["maven", "github-actions"],
+  "dependencyDashboard": true,
+  "packageRules": [
+    {
+      "description": "VanillaBP and this adapter follow their own releases, not Renovate: while they are snapshots there is nothing to look up, and a VanillaBP release is taken by hand together with the two platform BOMs it was built with.",
+      "matchPackageNames": ["/^io\\.vanillabp/", "/^org\\.pbinitiative\\.zenbpm/"],
+      "enabled": false
+    },
+    {
+      "description": "The Spring Boot and Quarkus versions are the ones adapter-platform-integration imports. They move when the VanillaBP platform moves, never on their own, because the platform integrations are compiled against exactly them.",
+      "matchPackageNames": [
+        "org.springframework.boot:spring-boot-dependencies",
+        "io.quarkus:quarkus-bom",
+        "io.quarkus:quarkus-extension-maven-plugin",
+        "io.quarkus:quarkus-extension-processor"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "gRPC and protobuf are pinned to the OLDER of the versions the two platform BOMs manage, so the adapter uses nothing either platform lacks; protobuf in particular refuses a runtime older than the code generated against it. They are raised by hand when a platform BOM moves.",
+      "matchPackageNames": ["io.grpc{/,}**", "com.google.protobuf{/,}**"],
+      "enabled": false
+    }
+  ]
+}

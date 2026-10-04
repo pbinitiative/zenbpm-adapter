@@ -1,0 +1,7 @@
+name: vanillabp-zenbpm
+artifact: "${project.groupId}:${project.artifactId}:${project.version}"
+dependencies:
+  - vanillabp
+capabilities:
+  provides:
+    - io.vanillabp.adapter.zenbpm
