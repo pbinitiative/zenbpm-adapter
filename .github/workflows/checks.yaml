@@ -23,6 +23,13 @@ jobs:
       # the engine image the integration tests start is pulled from ghcr.io, logged in
       # as this workflow, which keeps the pulls of a busy day under the anonymous limit
       packages: read
+    env:
+      # The VanillaBP snapshots live in VanillaBP's GitHub Packages, see settings.xml. A
+      # pull request from a fork gets no repository secrets, so both are empty there, and
+      # the job builds the snapshots from source instead (the step below). The secrets
+      # never reach code a fork wrote.
+      VANILLABP_PACKAGES_USER: "${{ secrets.VANILLABP_PACKAGES_USER }}"
+      VANILLABP_PACKAGES_TOKEN: "${{ secrets.VANILLABP_PACKAGES_TOKEN }}"
     steps:
       - uses: actions/checkout@v7
       # The build JDK is newer than the Java release the classes are compiled for (21,
@@ -35,15 +42,30 @@ jobs:
           cache: maven
       - name: Log in to the GitHub container registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      # Without the token, the two VanillaBP repositories this one builds against are
+      # public, so their snapshots are built from the head of their default branch into
+      # the local repository, which is what a contributor does on their own machine. That
+      # head can be newer than the published snapshot; a fork's pull request is then
+      # checked against the newer one, and the run with the token after the merge against
+      # the published one. The tests are skipped: they are those repositories' business.
+      - name: Build the VanillaBP snapshots from source (no package token)
+        if: "${{ env.VANILLABP_PACKAGES_TOKEN == '' }}"
+        run: |
+          git clone --quiet --depth 1 https://github.com/vanillabp/spi-for-java.git "$RUNNER_TEMP/spi-for-java"
+          git clone --quiet --depth 1 https://github.com/vanillabp/adapter-platform-integration.git "$RUNNER_TEMP/adapter-platform-integration"
+          mvn -f "$RUNNER_TEMP/spi-for-java/pom.xml" --batch-mode --no-transfer-progress install -DskipTests
+          cd "$RUNNER_TEMP/adapter-platform-integration" && ./mvnw --batch-mode --no-transfer-progress install -DskipTests
       # 'install' and not 'install verify': install already runs every phase verify has,
-      # and naming both walks the lifecycle twice.
+      # and naming both walks the lifecycle twice. GitHub Packages is only asked where the
+      # token is there; without it the snapshots built above are in the local repository.
       - name: Build and test
-        run: mvn -s $GITHUB_WORKSPACE/.github/workflows/settings.xml
-          --batch-mode --no-transfer-progress --update-snapshots install
-        env:
-          # the VanillaBP snapshots live in VanillaBP's GitHub Packages, see settings.xml
-          VANILLABP_PACKAGES_USER: "${{ secrets.VANILLABP_PACKAGES_USER }}"
-          VANILLABP_PACKAGES_TOKEN: "${{ secrets.VANILLABP_PACKAGES_TOKEN }}"
+        run: |
+          if [ -n "$VANILLABP_PACKAGES_TOKEN" ]; then
+            packages=(-s "$GITHUB_WORKSPACE/.github/workflows/settings.xml" --update-snapshots)
+          else
+            packages=()
+          fi
+          mvn "${packages[@]}" --batch-mode --no-transfer-progress install
       # What a failing test printed is in its report, and Surefire's last line in the log
       # is never the interesting one. The coverage reports explain a red gate.
       - name: Upload the reports of a failed build

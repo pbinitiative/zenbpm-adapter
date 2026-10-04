@@ -9,9 +9,10 @@ business application run its workflows on a ZenBPM engine without the business c
 the ZenBPM API. It is owned by the ZenBPM maintainers at pbinitiative and follows the conventions
 of the VanillaBP adapters.
 
-This `README.md` is aimed at contributors. Users will find the documentation in the
-[wiki](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/wiki); the VanillaBP concepts it
-builds on are documented in the [VanillaBP wiki](https://github.com/vanillabp/adapter-platform-integration/wiki).
+This `README.md` is aimed at contributors. The user documentation is not written yet: it goes into
+the [wiki](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/wiki) as the features land,
+and until then the wiki holds a placeholder page only. The VanillaBP concepts the adapter builds on
+are documented in the [VanillaBP wiki](https://github.com/vanillabp/adapter-platform-integration/wiki).
 
 ## Status
 
@@ -77,7 +78,9 @@ credentials even for public packages, and only accepts a classic personal access
 repository secrets which carry them are `VANILLABP_PACKAGES_USER` (a GitHub user name) and
 `VANILLABP_PACKAGES_TOKEN` (a classic token of that user with `read:packages` and nothing else);
 `.github/workflows/settings.xml` reads them. They are one maintainer's token today, so they are
-replaced when that maintainer leaves or the token expires.
+replaced when that maintainer leaves or the token expires. A pull request from a fork gets no
+repository secrets; its run builds `spi-for-java` and `adapter-platform-integration` from the head
+of their default branch instead, which takes a few minutes longer.
 
 ## Test coverage
 

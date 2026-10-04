@@ -41,12 +41,14 @@ headers, chosen when the file is created and never changed afterwards. A file wr
  */
 ```
 
-A file copied and adapted from `camunda8-adapter` or `process-engine-api-adapter`:
+A file copied and adapted from one of the VanillaBP adapters names the repository it actually came
+from, so the second line reads either `from vanillabp/camunda8-adapter` or
+`from vanillabp/process-engine-api-adapter`:
 
 ```java
 /*
  * Copyright 2026 Phactum Softwareentwicklung GmbH
- * Adapted for zenbpm-vanillabp-adapter from vanillabp/camunda8-adapter, see NOTICE.
+ * Adapted for zenbpm-vanillabp-adapter from vanillabp/process-engine-api-adapter, see NOTICE.
  * SPDX-License-Identifier: Apache-2.0
  */
 ```
