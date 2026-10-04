@@ -38,7 +38,7 @@ application against a fresh engine container.
 
 `blueprints` belongs to `vanillabp-blueprints`, so this story is a pull request there, prepared and
 tested in the workspace checkout: a fourth profile next to `camunda7`, `camunda8`,
-`process-engine-api` selecting `org.pbinitiative.zenbpmadapter:zenbpm-vanillabp-adapter-spring-boot`
+`process-engine-api` selecting `org.pbinitiative.zenbpm:zenbpm-vanillabp-adapter-spring-boot`
 resp. the Quarkus pair, `resources-location` `<module>/processes/zenbpm` where a model differs (most
 blueprint models use `zeebe:` extensions which the engine reads; a model with a signal or a
 conditional event needs a ZenBPM variant or is documented as not runnable there), a
@@ -51,20 +51,29 @@ says.
 **Acceptance criteria**: `./mvnw install -Pzenbpm` is green in the blueprints CI after the pull
 request is merged; until then, green locally against the workspace checkout.
 
-## S12.3.1 Renovate, workspace docs and the VanillaBP-side pages
+## S12.3.1 Renovate, local workspace notes and the VanillaBP wiki row
 
 - [ ] **Depends on:** S12.1.1.
 
-`renovate.json` reviewed against the finished dependency tree (the engine pin's custom manager, the
-VanillaBP platform version, the Spring Boot and Quarkus BOMs which have to move together with the
-platform). Root `AGENTS.md` and `README.md` of the workspace updated with the final facts. Two pull
-requests to the VanillaBP project: the two skills of S1.1.2 re-read against the finished adapter,
-and a row for this adapter on the platform wiki's `BPMS-adapters` page linking
+`renovate.json` reviewed against the finished dependency tree (the VanillaBP platform version, the
+Spring Boot and Quarkus BOMs which have to move together with the platform). Once the engine pin is
+a release tag (S12.4.1), a `customManagers` regex entry follows `pbinitiative/zenbpm`'s GitHub
+releases (datasource `github-releases`) for the pin, and the pull request it opens is completed by
+hand with the two contract copies of S1.2.1. The local workspace notes of S1.1.2 (root `AGENTS.md`,
+the two skill edits) re-read against the finished adapter; they stay local, because the workspace
+superproject belongs to the VanillaBP project and no pull request to it is planned. One request to
+the VanillaBP project: a row for this adapter on the platform wiki's `BPMS-adapters` page linking
 `pbinitiative/zenbpm-vanillabp-adapter`.
 
 ## S12.4.1 Release workflow and the first release
 
 - [ ] **Depends on:** S12.2.1, S12.3.1. **Open question 17** decides the target.
+
+Before the first release the engine pin leaves `main`: the maintainers tag an engine release
+containing the pinned commit (or a newer one, re-pinned by the S1.2.1 steps), and the root POM gets
+`zenbpm.version` = that tag with `zenbpm.image` = `ghcr.io/pbinitiative/zenbpm:${zenbpm.version}`;
+`zenbpm.commit` stays as the commit the tag points at. An adapter release never names a `dev` digest
+as its supported engine.
 
 `.github/workflows/release.yaml`, `on: push: {tags: ['v*']}`: checks out the tag, sets `-Drevision`
 from the tag (`v2.0.0` -> `2.0.0`), runs the full build with Docker ITs, `mvn deploy` to the release
@@ -75,5 +84,5 @@ process exists) - and creates the GitHub release with the tag's notes. The wiki 
 it. A `UPGRADE.md` header says there is nothing to upgrade from.
 
 **Acceptance criteria**: an application depending on
-`org.pbinitiative.zenbpmadapter:zenbpm-vanillabp-adapter-spring-boot:2.0.0` boots against the pinned
-engine image; the release workflow is the only path a release takes.
+`org.pbinitiative.zenbpm:zenbpm-vanillabp-adapter-spring-boot:2.0.0` boots against the pinned
+engine RELEASE image; the release workflow is the only path a release takes.

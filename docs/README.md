@@ -2,10 +2,11 @@
 
 This folder holds everything needed to build `zenbpm-vanillabp-adapter`, the VanillaBP 2 adapter for
 the ZenBPM engine (`github.com/pbinitiative/zenbpm`). The adapter is owned and built by the ZenBPM
-maintainers at `github.com/pbinitiative/zenbpm-vanillabp-adapter` (MIT licence, packages
-`org.pbinitiative.zenbpmadapter`), not by the VanillaBP project; it implements VanillaBP's adapter
-SPI and follows the conventions of the VanillaBP adapters so that a reader of one recognises the
-other. The plan was produced on 2026-09-07 and revised for that ownership on 2026-09-13, against
+maintainers at `github.com/pbinitiative/zenbpm-vanillabp-adapter` (MIT licence, groupId
+`org.pbinitiative.zenbpm`, packages `org.pbinitiative.zenbpmadapter`), not by the VanillaBP project;
+it implements VanillaBP's adapter SPI and follows the conventions of the VanillaBP adapters so that
+a reader of one recognises the other. The plan was produced on 2026-09-07 and revised for that
+ownership on 2026-09-13, against
 
 - `adapter-platform-integration` `2.0.0-SNAPSHOT` (adapter SPI as of decision 37),
 - `camunda8-adapter` at decision 20 (the structural template),
@@ -35,7 +36,7 @@ re-checked file by file rather than re-analysed.
 | Owned by pbinitiative (this repository and the engine) | Owned by the VanillaBP project (asked, not changed here) |
 |---|---|
 | every decision of `architecture/02-design-decisions.md`, the gaps, the configuration keys | the adapter SPI (`adapter-platform-integration`) and its `ADAPTER-AUTHORS.md` |
-| the engine changes of the engine-enablement epic (same maintainers, same organisation) | the skills in the workspace's `.claude/skills/` which still say the ZenBPM adapter is built on the PEA adapter |
+| the engine changes of the engine-enablement epic (same maintainers, same organisation) | the workspace superproject with its `.claude/skills/` (still saying the ZenBPM adapter is built on the PEA adapter; corrected only in the local workspace, no pull request planned) |
 | CI, releases, wiki at `pbinitiative/zenbpm-vanillabp-adapter.wiki`, coverage pages | the `blueprints` repository (a `-Pzenbpm` profile is a pull request there) and the wiki page `BPMS-adapters` which lists adapters |
 | the code copied from `camunda8-adapter` and `process-engine-api-adapter` (Apache 2.0), which keeps its notices | the `2.0.0-SNAPSHOT` platform artifacts the build reads from VanillaBP's GitHub Packages |
 

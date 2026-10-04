@@ -78,7 +78,7 @@ Reference implementations to read before starting: `Camunda8AdapterConfiguration
    | Method | Endpoint |
    |---|---|
    | `ready()` -> `Readiness(status, reasons)` | `GET /system/health/ready` (accept 200 and 503 as answers, not failures) |
-   | `status()` -> `EngineStatus(version, nodes)` | `GET /system/status` |
+   | `status()` -> `EngineStatus(version, commit, nodes)` | `GET /system/status` |
    | `deployBpmn(bytes)` -> `DeployedResource(key, created)` | `POST /process-definitions` octet-stream; 200 -> `created=false`, 201 -> `true` |
    | `deployDmn(bytes)` -> `DeployedResource` | `POST /dmn-resource-definitions` |
    | `processDefinition(key)` -> `ProcessDefinitionRef(key, bpmnProcessId, version, versionTag, bpmnData)` | `GET /process-definitions/{key}` |
@@ -236,8 +236,10 @@ wrapped in `CompletionException` and `RuntimeException`.
    200 -> UP with the engine version; 503 -> DOWN with the reasons; unreachable -> DOWN with the
    exception's message; bounded by `request-timeout`; never throws.
 5. `ZenBpmEnvironmentInfo.logOnce(factory)`: one INFO line per adapter id naming REST address, gRPC
-   address, client id, engine version (from `status()`) and the pinned version the adapter was tested
-   with, plus a WARN where the two minors differ.
+   address, client id, engine version and commit (from `status()`) and the commit the adapter was
+   tested with (`zenbpm.engine` of `adapter-zenbpm.properties`), plus a WARN where the two commits
+   differ. Not a comparison of versions: while the pin is a `main` build, the engine's version names
+   the last release and is the same for every build since.
 
 **Tests**
 

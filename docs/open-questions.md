@@ -109,9 +109,15 @@ deduplication, as Camunda 8 offers. E13.8.
 
 ### 7. Stability, versioning, authentication
 
-- Which release to pin for the first adapter release? Since 2026-09-23 the answer is constrained:
-  the adapter needs E13.1 (commit `071460cc`), so the earliest candidate is the release after
-  `v1.7.0` (`VERSION` says `v1.8.0`). When will it be tagged? Does the engine serve its OpenAPI document at runtime
+- Which release to pin for the first adapter release? The adapter needs E13.1 (commit `071460cc`,
+  2026-09-23), and `v1.8.0` (2026-09-14) does not carry it. During development the adapter pins a
+  `main` build (question 9); before its first release it needs a tagged engine release containing
+  that build (S12.4.1). When will the next release be tagged? Three smaller asks follow from pinning
+  `main` builds: (a) keep the untagged `dev` image versions in `ghcr.io/pbinitiative/zenbpm` (the
+  adapter pins them by digest), or better, also tag each `dev` push with its commit (`sha-<commit>`)
+  so the pin needs no digest; (b) `VERSION` on `main` still says `v1.8.0` after `v1.8.0` was
+  released, so `/system/status` cannot tell a `main` build from the release - a bump right after
+  each release (`v1.9.0-dev`) would; (c) does the engine serve its OpenAPI document at runtime
   (`/v1/openapi` or similar), so the adapter can diff its pinned copy against the running engine?
 - Is an API stability statement planned (which endpoints are stable, which are tooling)? The adapter
   pins one engine version per release (decision 15) until there is one.
@@ -130,12 +136,20 @@ The skill `vanillabp-bpms-characteristics` records the opposite decision. `analy
 gives the evidence: no PEA implementation for ZenBPM exists, and the PEA layer would hide what ZenBPM's
 REST API offers. **Decided (2026-09-13):** the adapter is largely based on `camunda8-adapter`; draft
 decision 1 stands. **To ask the VanillaBP project:** accept the two skill changes drafted in S1.1.2, so
-the workspace stops saying the adapter is built on the PEA adapter.
+the workspace stops saying the adapter is built on the PEA adapter. **Decided (2026-10-04):** not
+asked. The skills live in the workspace superproject `vanillabp/development-workspace`, which is
+not pbinitiative's, and no pull request to it is planned; the two skill edits stay local in the
+workspace (S1.1.2), where they correct what agents read.
 
 ### 9. Which engine version to pin, and no release lines
 
 **Recommendation:** pin the newest RELEASED tag when S1.2.1 runs; write "tested, not newer" into the
 README; no `line-*` profiles (draft decision 15). Revisit if an engine minor breaks the used surface.
+
+**Decided (2026-10-04):** the pin is the newest commit of the engine's `main` when S1.2.1 runs
+(E13.3, job retries, is expected on `main` by then), written as `zenbpm.commit` plus `zenbpm.image`
+= the digest of the `dev` image built from it; before the adapter's first release it moves to an
+engine release tag (S12.4.1). No `line-*` profiles. Decision 15 and S1.2.1 are written that way.
 
 ### 10. Default `use-prefix` instead of `by-adapter`
 
@@ -167,7 +181,10 @@ entirely until E13.4 lands. The plan ships the opt-in.
 the groupId. The plan uses `org.pbinitiative.zenbpmadapter`, equal to the root package; the
 alternative is the Java client's `org.pbinitiative.zenbpm` with artifact ids
 `zenbpm-vanillabp-adapter-*`, which puts engine client and adapter under one group. Either works;
-the choice has to be made before S1.1.1 and never changed afterwards. Artifact ids in any case:
+the choice has to be made before S1.1.1 and never changed afterwards.
+
+**Decided (2026-10-04):** groupId `org.pbinitiative.zenbpm`, artifact ids as listed below, packages
+stay `org.pbinitiative.zenbpmadapter`. Artifact ids in any case:
 `zenbpm-vanillabp-adapter` (core), `zenbpm-vanillabp-adapter-spring-boot`,
 `zenbpm-vanillabp-adapter-quarkus`, `zenbpm-vanillabp-adapter-quarkus-deployment`,
 `zenbpm-vanillabp-adapter-engine-test-support`. The wiki lives at
@@ -199,11 +216,12 @@ now.
 
 ### 16. How the CI reads VanillaBP's snapshot artifacts
 
-`io.vanillabp:*` is `2.0.0-SNAPSHOT` and lives in VanillaBP's GitHub Packages, which requires a token
-even for public packages. The plan (S1.3.1) stores a maintainer's PAT with `read:packages` as two
-repository secrets. **To ask the VanillaBP project:** whether a dedicated read-only machine account (or
-a published release on Maven Central) is planned, so a foreign organisation's CI does not depend on one
-person's token. Until then, the secrets are rotated when that person leaves, and the README's
+`io.vanillabp:*` is `2.0.0-SNAPSHOT` and lives in VanillaBP's GitHub Packages, which requires a
+token even for public packages. The plan (S1.3.1) stores a maintainer's classic PAT with
+`read:packages` as two repository secrets (done 2026-10-04; the Maven registry refuses fine-grained
+tokens). **To ask the VanillaBP project:** whether a dedicated read-only machine account (or a
+published release on Maven Central) is planned, so a foreign organisation's CI does not depend on
+one person's token. Until then, the secrets are rotated when that person leaves, and the README's
 "Contributing" section names them.
 
 ### 17. Where releases are published

@@ -3,7 +3,7 @@
 These are the entries the plan expects the repository to carry once its stories are done. Numbers are
 handed out here so stories can already say `see decision 5 in the repository's DECISIONS.md`; the
 ZenBPM maintainers, who own this repository, confirm or strike an entry before the story which first
-cites it is merged (open questions 8 and 10 name the two the VanillaBP project should hear about).
+cites it is merged (open question 10 names the one the VanillaBP project should hear about).
 Entries 16 and 17 were added when the ownership was settled on 2026-09-13. The form follows the
 other adapters: a decision earns a number when several places rely on it, an entry is superseded and
 never edited.
@@ -37,7 +37,7 @@ would bring a generator into every build and its own reflection into every nativ
 side is a thin `java.net.http` + Jackson client written against the copy of `openapi/api.yaml` this
 repository pins, with one method per endpoint and one exception carrying the status code. The job
 stream is generated from the pinned `zenbpm.proto`, because that is what protobuf is for. The pinned
-copies name the engine version they came from, and a test diffs them against the image the
+copies name the engine commit they came from, and a test diffs them against the image the
 integration tests run.
 
 ### 4. The deployed model is rewritten, once per file, idempotently, and never over what the modeller wrote
@@ -145,15 +145,19 @@ versions of a process, which is what the check is for.
 
 ### 15. One pinned engine version, no release lines
 
-The lowest engine the adapter accepts is the first release carrying E13.1 (commit `071460cc`: lock
-per subscription, lock extension, `lock_until`), because the task delivery of decision 9 is built on
-it; the adapter asks `GET /system/status` at startup and ends the boot guiding where the engine is
-older. Beyond that the adapter compiles against no engine artifact, so no pin decides anything else; the
-REST contract is the copy of `api.yaml` this repository ships, and the integration tests run against the
-image of that version. Supported means tested: the pinned image and nothing newer. Release lines are
-what Camunda 8 needs because its client is the minimum cluster; here they would be branches for a
-contract which has no stability promise yet. If an engine minor breaks the surface the adapter uses,
-the answer is a new adapter release against the new pin, and this entry is revisited.
+The adapter needs at least E13.1 (commit `071460cc`: lock per subscription, lock extension,
+`lock_until`), because the task delivery of decision 9 is built on it, and no release carried it
+when the adapter was started. So during development the pin is a commit of the engine's `main` and
+the digest of the image built from it; before the adapter's first release it becomes an engine
+release tag. At startup the adapter logs the engine's version and commit from `GET /system/status`
+and warns where the commit is not the tested one. It does not compare versions: the version an
+engine on `main` reports is the last release's, the same for every build since. Beyond that the
+adapter compiles against no engine artifact, so no pin decides anything else; the REST contract is
+the copy of `api.yaml` this repository ships, and the integration tests run against the pinned
+image. Supported means tested: the pinned image and nothing newer. Release lines are what Camunda 8
+needs because its client is the minimum cluster; here they would be branches for a contract which
+has no stability promise yet. If an engine minor breaks the surface the adapter uses, the answer is
+a new adapter release against the new pin, and this entry is revisited.
 
 ### 16. The adapter follows VanillaBP's adapter conventions although another organisation owns it
 
@@ -164,7 +168,8 @@ construct and register, Spotless with the platform's formatting conventions, cov
 platform with the same gate and rule, `test-utils` in every test, a `DECISIONS.md` as the only thing
 code cites, a user-facing wiki and a contributor-facing README, and configuration under
 `vanillabp.adapters.<id>.*` validated at startup with guiding messages. What differs is what
-ownership decides: the licence, the coordinates (`org.pbinitiative.zenbpmadapter`), the CI and where
+ownership decides: the licence, the coordinates (groupId `org.pbinitiative.zenbpm`, packages
+`org.pbinitiative.zenbpmadapter`), the CI and where
 releases are published. The Go conventions of the engine repository do not reach into this one.
 
 ### 17. Code adapted from the Apache-2.0 adapters keeps its licence and its notice

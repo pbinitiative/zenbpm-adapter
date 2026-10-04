@@ -4,11 +4,13 @@
 
 - Repository `github.com/pbinitiative/zenbpm-vanillabp-adapter` (exists, default branch `main`, MIT
   licence, owned by the ZenBPM maintainers), checked out as a sibling of the other adapters in the
-  workspace and registered in the superproject's `.gitmodules` as a LOCAL-ONLY member like `zenbpm`
-  (the superproject's own CI never sees either); plus `pbinitiative/zenbpm-vanillabp-adapter.wiki`.
-  What the workspace still needs is in S1.1.2.
-- groupId `org.pbinitiative.zenbpmadapter` (equal to the root package, so a class name tells the
-  artifact), artifacts `zenbpm-vanillabp-adapter` (core), `zenbpm-vanillabp-adapter-spring-boot`,
+  workspace as a LOCAL-ONLY member like `zenbpm`: a plain clone, ignored by the superproject, with
+  nothing committed to `vanillabp/development-workspace` (the superproject's own CI never sees
+  either, and no pull request to it is planned); plus `pbinitiative/zenbpm-vanillabp-adapter.wiki`.
+  S1.1.2 finishes the local setup.
+- groupId `org.pbinitiative.zenbpm` (the group of the engine's Java client, so engine client and
+  adapter are found under one group; the root package stays `org.pbinitiative.zenbpmadapter`),
+  artifacts `zenbpm-vanillabp-adapter` (core), `zenbpm-vanillabp-adapter-spring-boot`,
   `zenbpm-vanillabp-adapter-quarkus`, `zenbpm-vanillabp-adapter-quarkus-deployment`,
   `zenbpm-vanillabp-adapter-engine-test-support`; version `${revision}` = `2.0.0-SNAPSHOT`, Java 21,
   Spring Boot 4.1.x and Quarkus 3.39.x as managed by `adapter-platform-integration`. The VanillaBP
@@ -25,14 +27,16 @@
   conventions of `zenbpm/AGENTS.md` do not apply here.
 - Adapter type constant `zenbpm` (`ZenBpmAdapter.ADAPTER_TYPE`), Quarkus capability
   `io.vanillabp.adapter.zenbpm`, extension name `vanillabp-zenbpm`.
-- Engine pin: one property `zenbpm.version`, at least the first release carrying E13.1 (engine
-  commit `071460cc`; `VERSION` calls it `v1.8.0`), which the task delivery requires (decision 15;
-  open question 9), filtered into
-  `core/src/main/resources/META-INF/vanillabp/adapter-zenbpm.properties` (`adapter.version`,
-  `platform.version`, `zenbpm.engine`) and into the test resource `zenbpm-engine.properties`
-  (`engine.image=ghcr.io/pbinitiative/zenbpm:${zenbpm.version}`). The API contract the adapter is
-  written against is the copy `core/src/main/zenbpm/api.yaml` and `core/src/main/proto/zenbpm.proto`
-  taken from the engine tag; a test diffs the shipped copies against the pinned image's
+- Engine pin: the newest engine `main` commit when S1.2.1 runs (it must carry E13.1, commit
+  `071460cc`, which the task delivery requires; decision 15, open question 9), written as two
+  properties: `zenbpm.commit` and `zenbpm.image` = the digest of the `dev` image built from that
+  commit (`ghcr.io/pbinitiative/zenbpm@sha256:...`, because `dev` moves with every push). Filtered
+  into `core/src/main/resources/META-INF/vanillabp/adapter-zenbpm.properties` (`adapter.version`,
+  `platform.version`, `zenbpm.engine` = the commit) and into the test resource
+  `zenbpm-engine.properties` (`engine.image=${zenbpm.image}`). Before the first release the pin
+  becomes an engine release tag (S12.4.1). The API contract the adapter is written against is the
+  copy `core/src/main/zenbpm/api.yaml` and `core/src/main/proto/zenbpm.proto` taken from the pinned
+  commit; a test diffs the shipped copies against the pinned image's
   `/v1/openapi` where the engine serves it, otherwise the copy is the contract.
 
 ```
@@ -314,10 +318,10 @@ once the wait answered.
 
 ## 8. Test infrastructure
 
-- `EngineUnderTest` (Spring ITs) and `EngineImage` (Quarkus) start
-  `ghcr.io/pbinitiative/zenbpm:${zenbpm.version}` with `REST_API_ADDR=:8080`, `GRPC_API_ADDR=:9090`,
-  `CLUSTER_RAFT_BOOTSTRAP_EXPECT=1`, `POLL_TIMER_DELAY_SECONDS=1`, waiting for
-  `GET /system/health/ready` = 200; ports from `FreePortUtil` where fixed ports are needed.
+- `EngineUnderTest` (Spring ITs) and `EngineImage` (Quarkus) start `${zenbpm.image}` with
+  `REST_API_ADDR=:8080`, `GRPC_API_ADDR=:9090`, `CLUSTER_RAFT_BOOTSTRAP_EXPECT=1`,
+  `POLL_TIMER_DELAY_SECONDS=1`, waiting for `GET /system/health/ready` = 200; ports from
+  `FreePortUtil` where fixed ports are needed.
 - One container per IT class with a real engine, `@DirtiesContext`, own workflow module id, own
   resources location (`vanillabp-testing` skill).
 - `SuppressOutputExtension` first on every class, `logback-test.xml` quieting Testcontainers.

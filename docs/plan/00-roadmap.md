@@ -49,7 +49,7 @@ where the dependency is not simply the previous one.
 | # | Story | Epic | Increment proven by |
 |---|---|---|---|
 | 1 | S1.1.1 Repository skeleton | E1 | `mvn install` green on an empty core, coverage gate present |
-| 2 | S1.1.2 Workspace membership | E1 | superproject builds the new repo in the warmup order, `.gitmodules` on `main` |
+| 2 | S1.1.2 Workspace membership, locally | E1 | local `.gitmodules` on `main`, wiki checked out, skill drafts; nothing committed to the superproject |
 | 3 | S1.3.1 Pull-request check | E1 | a green check on GitHub resolving `io.vanillabp:*` from VanillaBP's packages, Spotless red on a misformatted branch |
 | 4 | S1.3.2 Snapshot publication and coverage pages | E1 | `2.0.0-SNAPSHOT` in pbinitiative's packages, both report pages and badges live |
 | 5 | S1.2.1 Pinned engine contract and container helper | E1 | a test starts the engine image and reads `/system/health/ready` |
@@ -106,7 +106,7 @@ where the dependency is not simply the previous one.
 | 56 | S11.6.1 Nightly workflow | E11 | pinned engine, engine `latest`, native image, each with a summary line |
 | 57 | S12.1.1 Wiki and README | E12 | pages exist, every claim names its test |
 | 58 | S12.2.1 Blueprints profile `-Pzenbpm` (pull request to VanillaBP) | E12 | blueprints run on the engine in their CI |
-| 59 | S12.3.1 Renovate, workspace docs, VanillaBP-side pages | E12 | skills and the `BPMS-adapters` wiki row proposed |
+| 59 | S12.3.1 Renovate, local workspace notes, VanillaBP wiki row | E12 | local notes re-read, the `BPMS-adapters` wiki row proposed |
 | 60 | S12.4.1 Release workflow and first release | E12 | `v2.0.0` tag builds, publishes and creates the release |
 
 E13 stories are ordered by value in their own file and slot in wherever the engine work is done.

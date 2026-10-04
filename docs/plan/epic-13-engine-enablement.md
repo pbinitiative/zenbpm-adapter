@@ -8,8 +8,9 @@ review with the `zenbpm-code-review` skill; tests per the `zenbpm-e2e-tests` ski
 **Ordering.** By value for the adapter: E13.1 (done 2026-09-23) and E13.4 remove the two limits a
 user meets first (the 30-second lock, the unfindable message-started workflow); E13.2, E13.3, E13.5, E13.6 make the
 adapter simpler; E13.7 to E13.10 are quality. Each feature names the adapter story it supersedes; the
-adapter keeps its fallback until the engine version carrying the change is the pinned one, then
-switches by version (read from `/system/status`) or drops the fallback with a `UPGRADE.md` entry.
+adapter keeps its fallback until the engine build carrying the change is the pinned one, then
+drops the fallback with an `UPGRADE.md` entry. It does not switch by the version `/system/status`
+reports: while the pin is a `main` build that version names the last release (decision 15).
 
 Every engine feature here is also an open question to the ZenBPM maintainers (open-questions 1-7),
 because a different shape may already be planned. Since the same organisation owns the engine and the

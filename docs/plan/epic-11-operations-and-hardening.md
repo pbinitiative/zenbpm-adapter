@@ -68,13 +68,13 @@ says what is needed.
 
 `.github/workflows/nightly.yaml`, `on: schedule` (once a night) and `workflow_dispatch`, three jobs:
 
-1. `pinned-engine`: the full build with Docker ITs against `zenbpm.version`, the same as `checks.yaml`
+1. `pinned-engine`: the full build with Docker ITs against `zenbpm.image`, the same as `checks.yaml`
    (so a flaky test shows up on a quiet night and not in somebody's pull request);
-2. `latest-engine`: the same ITs with `-Dzenbpm.image=ghcr.io/pbinitiative/zenbpm:latest` (the property
-   the container helper reads is overridable for exactly this), `continue-on-error: true`, and a summary
-   line naming the engine version the container reported; a red job here is the earliest warning that
-   an engine change broke the adapter, and because the same organisation owns both, the finding goes
-   straight into the engine's issue tracker;
+2. `latest-engine`: the same ITs with `-Dzenbpm.image=ghcr.io/pbinitiative/zenbpm:dev` (the newest
+   `main` build; the property the container helper reads is overridable for exactly this),
+   `continue-on-error: true`, and a summary line naming the engine commit the container reported; a
+   red job here is the earliest warning that an engine change broke the adapter, and because the
+   same organisation owns both, the finding goes straight into the engine's issue tracker;
 3. `native-image`: the native build and `ZenBpmNativeImageIT` of S11.4.1 (GraalVM via
    `graalvm/setup-graalvm`), never on pull requests because it takes long.
 

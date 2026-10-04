@@ -1,7 +1,7 @@
 # E1 - Repository and workspace foundation
 
 **Goal.** A repository which builds green with an empty core - locally AND in GitHub Actions at
-`pbinitiative/zenbpm-vanillabp-adapter` - is wired into the workspace superproject, carries the
+`pbinitiative/zenbpm-vanillabp-adapter` - is part of the local workspace, carries the
 documents every adapter carries, and can start the ZenBPM engine from a test.
 
 **Why first.** Every later story adds tests which need the coverage gate, the Spotless rules, the
@@ -11,8 +11,8 @@ organisation's GitHub Packages, the CI's access to them is the first thing which
 proven before any Java exists.
 
 **Done when.** `mvn install` is green in the new repo, the pull-request workflow is green on GitHub,
-snapshots and coverage pages are published from `main`, the superproject's warmup builds it, and one
-test has talked to a ZenBPM container.
+snapshots and coverage pages are published from `main`, the local workspace builds it after the
+platform, and one test has talked to a ZenBPM container.
 
 The repository already exists (`https://github.com/pbinitiative/zenbpm-vanillabp-adapter`, default
 branch `main`, `LICENSE` = MIT, a one-line `README.md`, a Java `.gitignore`) and is checked out in
@@ -42,7 +42,8 @@ wiki sentence promising behaviour names the test which holds it.
    keep `/zenbpm-vanillabp-adapter.iml`), `test-coverage-report/` (three modules). Rename every
    `camunda8`/`Camunda8` occurrence; every copied Java file keeps its Apache header, every new file
    gets an MIT header. The workflows are F1.3, not copied here.
-2. Root `pom.xml`: groupId `org.pbinitiative.zenbpmadapter`, artifactId
+2. Root `pom.xml`: groupId `org.pbinitiative.zenbpm` (the group of the engine's Java client; the
+   root package stays `org.pbinitiative.zenbpmadapter`), artifactId
    `zenbpm-vanillabp-adapter-parent`, version `${revision}` with
    `<revision>2.0.0-SNAPSHOT</revision>`, `flatten-maven-plugin` (`resolveCiFriendliesOnly`),
    modules `core`, `spring-boot`, `smoke-test`, `quarkus/runtime`, `quarkus/deployment`,
@@ -51,9 +52,10 @@ wiki sentence promising behaviour names the test which holds it.
    the time of the story), manage `spi-for-java`, `vanillabp-adapter-spi`,
    `vanillabp-spring-boot-integration`, `vanillabp-quarkus-integration`,
    `vanillabp-quarkus-integration-deployment`, `test-utils`, `testcontainers`,
-   `testcontainers-junit-jupiter`, `grpc-*`, `protobuf-java`. Properties `zenbpm.version` (see
-   S1.2.1), `coverage.threshold.spring-boot` = `coverage.threshold.quarkus` = 85, `coverage.rule` =
-   90. No `line-*` profiles, no `build-helper` per-line sources.
+   `testcontainers-junit-jupiter`, `grpc-*`, `protobuf-java`. Properties
+   `coverage.threshold.spring-boot` = `coverage.threshold.quarkus` = 85, `coverage.rule` = 90; the
+   engine pin (`zenbpm.commit`, `zenbpm.image`) is S1.2.1's, so this story needs no engine. No
+   `line-*` profiles, no `build-helper` per-line sources.
 3. Copy the Spotless, JaCoCo (`@{jacoco.agent}`, excludes `**/it/**`, `**/test/**`), surefire and
    failsafe configuration from the Camunda 8 parent; add `**/generated-sources/**` to the Spotless
    excludes (S1.2.2 puts stubs there).
@@ -66,27 +68,29 @@ wiki sentence promising behaviour names the test which holds it.
    ```properties
    adapter.version=${project.version}
    platform.version=${adapter-platform.version}
-   zenbpm.engine=${zenbpm.version}
    ```
+
+   S1.2.1 adds `zenbpm.engine=${zenbpm.commit}` together with the pin.
 
 5. `core/src/main/java/org/pbinitiative/zenbpmadapter/ZenBpmAdapter.java` with `ADAPTER_TYPE =
    "zenbpm"` and a javadoc saying what the type means (the id defaults to it).
 6. Root documents: `AGENTS.md` (copy the Camunda 8 one, adjust names, add one paragraph: this
    repository is owned by the ZenBPM maintainers, follows the VanillaBP adapter conventions by
    decision 16, and the engine's Go conventions do not apply), `DECISIONS.md` with the entries 1, 3,
-   13, 15, 16 and 17 of `architecture/02-design-decisions.md` (the ones this story already relies on),
-   `GAPS.md` with the header and entries 11-14, 18 and 21 (the ones which need no code to be true),
-   `UPGRADE.md` with a header only, `README.md` replacing the one-liner: Status "Skeleton", the module
-   table, the build order (`spi-for-java` -> `adapter-platform-integration` -> this repository, with
-   the note that the two upstream repositories are VanillaBP's and their snapshots come from GitHub
-   Packages), the engine pin, a "Licence" section (MIT plus the Apache-2.0 attribution) and a "Test
-   coverage" section copied and adjusted. The `docs/` folder stays as the plan; the README links it.
+   13, 15, 16 and 17 of `architecture/02-design-decisions.md` (the ones this story already relies
+   on), `GAPS.md` with the header and entries 11-14, 18 and 21 (the ones which need no code to be
+   true), `UPGRADE.md` with a header only, `README.md` replacing the one-liner: Status "Skeleton",
+   the module table, the build order (`spi-for-java` -> `adapter-platform-integration` -> this
+   repository, with the note that the two upstream repositories are VanillaBP's and their snapshots
+   come from GitHub Packages), a "Supported engine version" heading saying "not pinned yet" (S1.2.1
+   fills it), a "Licence" section (MIT plus the Apache-2.0 attribution) and a "Test coverage"
+   section copied and adjusted. The `docs/` folder stays as the plan; the README links it.
 7. `renovate.json` of the repository's own (`config:recommended`, Maven and GitHub Actions managers,
-   `dependencyDashboard`), plus a `customManagers` regex entry which updates `zenbpm.version` from the
-   GitHub releases of `pbinitiative/zenbpm` (datasource `github-releases`, `extractVersion`
-   `^v(?<version>.*)$` if the property is written without the `v`; decide one spelling and use it in
-   the image tag as well). VanillaBP's shared preset is not used: it carries rules for VanillaBP's
-   own release trains.
+   `dependencyDashboard`). VanillaBP's shared preset is not used: it carries rules for VanillaBP's
+   own release trains. The engine pin is NOT left to Renovate while it is a `main` commit: the pin,
+   the image digest and the two contract copies move together in one hand-made commit (S1.2.1 says
+   how). A `customManagers` entry for engine releases is added once the pin is a release tag
+   (S12.3.1).
 
 **Tests**
 
@@ -105,60 +109,59 @@ wiki sentence promising behaviour names the test which holds it.
 - [ ] `DECISIONS.md`, `GAPS.md`, `AGENTS.md`, `README.md`, `UPGRADE.md`, `NOTICE`,
   `LICENSE-APACHE-2.0` exist with the content above.
 
-### S1.1.2 Finish the workspace membership
+### S1.1.2 Finish the workspace membership, locally
 
-- [ ] **Depends on:** S1.1.1 pushed to `main` (a recursive clone needs the commit on the remote).
+- [ ] **Depends on:** S1.1.1 pushed to `main`.
 
 **Instructions**
 
-The superproject already lists `zenbpm-vanillabp-adapter` in `.gitmodules` (uncommitted) and the
-checkout exists. Like `zenbpm`, the adapter is a LOCAL member of the workspace only: the
-superproject's GitHub CI (`update-submodules.yml`) is not meant to see either of the two
-pbinitiative repositories, and their directories stay ignored at the top level (root `AGENTS.md`
-says so for `zenbpm`). What is missing, as of 2026-09-13:
+The workspace superproject is `vanillabp/development-workspace`, which the VanillaBP project owns.
+Nothing about the two pbinitiative repositories is committed there, and no pull request to it is
+planned: `zenbpm` and `zenbpm-vanillabp-adapter` are plain clones next to the submodules, with no
+gitlink in the superproject's index, and their directories stay ignored by the top-level `/*` of
+`.gitignore`. So `.gitmodules` entries for them do nothing for `git submodule`, the superproject's
+CI (`update-submodules.yml`) never sees them, and a recursive clone of the workspace does not get
+them. Everything below stays an uncommitted change of the local workspace, as the root `AGENTS.md`
+and the two `zenbpm-*` skills already are.
 
-1. `.gitmodules`: the entry says `branch = master` while the repository's default branch is `main`;
-   change it to `main` (`git submodule set-branch -b main zenbpm-vanillabp-adapter`) or
-   `git submodule update --remote` will fail. Add `zenbpm-vanillabp-adapter.wiki` (`master`, created
-   empty on GitHub first) if the wiki is to be checked out like the other adapters' wikis. To keep
-   the CI's `git submodule update --init --remote --recursive` from touching the two pbinitiative
-   entries once `.gitmodules` is committed, give both `update = none`; a developer initialises them
-   explicitly with `git submodule update --init --checkout zenbpm zenbpm-vanillabp-adapter`, which
-   overrides the setting.
-2. `.gitignore`: NO re-include for `/zenbpm-vanillabp-adapter/` (everything at top level is ignored
-   by `/*`, and that is intended here, as for `/zenbpm/`). Only the `.gitmodules` entry travels.
-3. Root `AGENTS.md`: the paragraph which names `zenbpm` as a deliberately not re-included, locally
-   checked out submodule gains `zenbpm-vanillabp-adapter` (owned by pbinitiative, Java, follows the
-   VanillaBP adapter conventions, builds with `cd zenbpm-vanillabp-adapter && mvn install` after the
-   platform, ITs need Docker for `ghcr.io/pbinitiative/zenbpm`). Root `README.md`: no row in the
-   submodule table, which lists what a recursive clone gets; one sentence under it names the two
-   local-only members.
-4. `dev-containers/devcontainers-config.json`: `repos` gains `zenbpm-vanillabp-adapter` (`main`) and
-   `zenbpm-vanillabp-adapter.wiki` (`master`); `builds` gains
+1. Local `.gitmodules`: both pbinitiative entries say `branch = master`, but the default branch of
+   `zenbpm` and of `zenbpm-vanillabp-adapter` is `main`. Change both to `main`, so the file does not
+   say something wrong, even though no `git submodule` command uses the entries yet.
+2. Wiki: clone `git@github.com:pbinitiative/zenbpm-vanillabp-adapter.wiki.git` next to the adapter
+   as `zenbpm-vanillabp-adapter.wiki/` (the wiki exists since 2026-10-04 with a `Home` page). The
+   top-level `/*` ignores it like the adapter.
+3. Local root `AGENTS.md`: the paragraph which names `zenbpm` as a locally checked out member gains
+   `zenbpm-vanillabp-adapter` and its wiki (owned by pbinitiative, Java, follows the VanillaBP
+   adapter conventions, builds with `cd zenbpm-vanillabp-adapter && mvn install` after the platform,
+   ITs need Docker for `ghcr.io/pbinitiative/zenbpm`). The root `README.md` stays untouched: its
+   submodule table lists what a recursive clone gets, and neither pbinitiative repository is part of
+   one.
+4. Optional, for those who use the devcontainer warmup: in the local
+   `dev-containers/devcontainers-config.json`, `repos` gains `zenbpm-vanillabp-adapter` (`main`) and
+   `zenbpm-vanillabp-adapter.wiki` (`master`), and `builds` gains
    `{ "repo": "zenbpm-vanillabp-adapter", "mvn-goal": "compile" }` after the platform. A missing
-   source repository is skipped silently by the tooling, so a workspace without the local checkout
-   is unaffected.
-5. Skills: the skills live in the workspace superproject, which the VanillaBP project maintains.
-   Draft the two changes and propose them (open question 8): in
+   source repository is skipped silently by the tooling.
+5. Skills (open question 8): draft the two changes as uncommitted edits in the workspace, where
+   agents working there read them at once. In
    `.claude/skills/vanillabp-bpms-characteristics/SKILL.md` replace the "ZenBPM (future)" section
    and the cheat-sheet column with the facts of `analysis/01-zenbpm-capabilities.md` (remote, REST +
-   gRPC stream, at-least-once, job lock per subscription and extendable (E13.1), no listeners, no signals, no tenant, `use-prefix`
-   default, owned by pbinitiative) and replace "Decided: built on the PEA adapter" with decision 1's
-   outcome; in `vanillabp-adapter-building` add `zenbpm-vanillabp-adapter` to the repository list
-   with its organisation and groupId and mention the raw-XML model type as the third shape next to
-   Camunda's model and PEA's bytes.
-6. Commit the superproject (`chore: add zenbpm-vanillabp-adapter submodule`).
+   gRPC stream, at-least-once, job lock per subscription and extendable (E13.1), no listeners, no
+   signals, no tenant, `use-prefix` default, owned by pbinitiative) and replace "Decided: built on
+   the PEA adapter" with decision 1's outcome; in `vanillabp-adapter-building` add
+   `zenbpm-vanillabp-adapter` to the repository list with its organisation and groupId and mention
+   the raw-XML model type as the third shape next to Camunda's model and PEA's bytes. The skills
+   live in the superproject, so the edits stay local like the rest of this story.
 
 **Acceptance criteria**
 
-- [ ] `git submodule update --init --checkout zenbpm-vanillabp-adapter` checks the repository out on
-  `main` in a fresh workspace clone; a plain `--recurse-submodules` clone and the superproject's CI
-  leave it alone.
-- [ ] `git submodule update --remote --merge zenbpm-vanillabp-adapter` advances it locally.
-- [ ] The devcontainer warmup builds it after the platform (verify by reading the config; a spawn is
-  optional).
-- [ ] Both skill changes are drafted and handed to the VanillaBP project; where they are accepted,
-  the "built on PEA" sentence is gone or marked superseded.
+- [ ] `git status` of the superproject shows no new tracked path and no gitlink for either
+  pbinitiative repository; `git -C zenbpm-vanillabp-adapter pull` advances the adapter on `main`.
+- [ ] The local `.gitmodules` names `main` for both pbinitiative entries.
+- [ ] `zenbpm-vanillabp-adapter.wiki/` is checked out and ignored by the superproject.
+- [ ] Where the devcontainer config was changed, it builds the adapter after the platform (verify by
+  reading the config; a spawn is optional).
+- [ ] Both skill changes are drafted locally; the "built on PEA" sentence is gone or marked
+  superseded in the local copy.
 
 ---
 
@@ -176,13 +179,20 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
 
 **Instructions**
 
-1. `.github/workflows/settings.xml` (Maven settings, committed): a `<server id="vanillabp-github">` with
-   `${env.VANILLABP_PACKAGES_USER}` / `${env.VANILLABP_PACKAGES_TOKEN}` and a repository entry for
-   `https://maven.pkg.github.com/vanillabp/*` (snapshots enabled), so `io.vanillabp:*:2.0.0-SNAPSHOT`
-   resolves. GitHub Packages needs a token even for public packages: a classic PAT with
-   `read:packages` of ANY GitHub account works (open question 16 asks the VanillaBP project whether a
-   dedicated read-only account should be provided; until then a maintainer's own PAT is stored as the
-   two repository secrets `VANILLABP_PACKAGES_USER` and `VANILLABP_PACKAGES_TOKEN`).
+1. `.github/workflows/settings.xml` (Maven settings, committed), shaped like
+   `camunda8-adapter/.github/workflows/github-packages-settings.xml`: an active profile with
+   `central` plus two snapshot-only repository entries, `vanillabp-adapter-platform-integration`
+   (`https://maven.pkg.github.com/vanillabp/adapter-platform-integration`: adapter SPI, both
+   platform integrations, `test-utils`) and `vanillabp-spi-for-java`
+   (`https://maven.pkg.github.com/vanillabp/spi-for-java`), and one `<server>` per entry with
+   `${env.VANILLABP_PACKAGES_USER}` / `${env.VANILLABP_PACKAGES_TOKEN}`, so
+   `io.vanillabp:*:2.0.0-SNAPSHOT` resolves. One entry per repository, not a `vanillabp/*` wildcard:
+   that is the form the Camunda 8 CI proves every day. GitHub Packages needs a token even for public
+   packages, and only a CLASSIC personal access token: fine-grained tokens are refused by the Maven
+   registry. A classic token with nothing but `read:packages`, of ANY GitHub account, works (open
+   question 16 asks the VanillaBP project whether a dedicated read-only account should be provided;
+   until then a maintainer's own PAT is stored as the two repository secrets
+   `VANILLABP_PACKAGES_USER` and `VANILLABP_PACKAGES_TOKEN`).
 2. `.github/workflows/checks.yaml`, `on: [pull_request, push: {branches: [main]},
    workflow_dispatch]`, `concurrency` cancelling in-progress runs per ref, `permissions: contents:
    read`. One job `build` on `ubuntu-latest` (Docker is available there): `actions/checkout@v7`,
@@ -242,16 +252,34 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
 
 **Instructions**
 
-1. Decide the pin (open question 9): the first RELEASED tag carrying E13.1 (engine commit
-   `071460cc`, 2026-09-23: lock per subscription, lock extension, `lock_until`), which the adapter
-   requires (decision 15) - the tag after `v1.7.0`, which `VERSION` calls `v1.8.0` and which also
-   brings the `application/octet-stream` deploy contract. Until it is tagged, build the image from
-   `main` for local runs and keep this story's CI on a commit-pinned image; never pin `v1.7.0`. Write the pin ONCE as `zenbpm.version` in the root
-   POM and derive `zenbpm.image` = `ghcr.io/pbinitiative/zenbpm:${zenbpm.version}`.
-2. Copy `zenbpm/openapi/api.yaml` of that tag to `core/src/main/zenbpm/api.yaml` and
-   `zenbpm/pkg/zenclient/proto/zenbpm.proto` to `core/src/main/proto/zenbpm.proto`, each with a
-   header line naming the tag and the commit. These copies ARE the contract the adapter is written
-   against (decision 3).
+1. Take the pin (open question 9): the newest commit of the engine's `main` at the time this story
+   runs, not a release tag. `v1.8.0` (2026-09-14) predates E13.1 (engine commit `071460cc`,
+   2026-09-23: lock per subscription, lock extension, `lock_until`), which the adapter requires
+   (decision 15), and E13.3 (job retries) is about to be merged to `main` as well; never pin
+   `v1.8.0` or older. The engine's CI publishes every `main` commit as the MOVING tag
+   `ghcr.io/pbinitiative/zenbpm:dev` (`release-dev.yaml`), so the pin is that image's digest, taken
+   together with the commit it was built from:
+
+   ```bash
+   docker pull ghcr.io/pbinitiative/zenbpm:dev
+   docker inspect --format '{{index .RepoDigests 0}}' ghcr.io/pbinitiative/zenbpm:dev
+   docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' \
+     ghcr.io/pbinitiative/zenbpm:dev
+   ```
+
+The revision label is the commit; check that it is the head of `origin/main` (a commit whose
+`release-dev` run was cancelled by a newer push has no image, so take the newest one which has).
+Write both ONCE in the root POM (S1.1.1 left them out) and add `zenbpm.engine=${zenbpm.commit}` to
+`adapter-zenbpm.properties`: `zenbpm.commit` = the full 40-character commit and `zenbpm.image` =
+`ghcr.io/pbinitiative/zenbpm@sha256:<digest>` (no tag in front of the `@`: Testcontainers'
+`DockerImageName` refuses `name:tag@digest`). Moving the pin later repeats these steps and step 2 in
+one commit. When the engine tags a release containing the pinned commit, the pin becomes that tag
+(S12.4.1 does it at the latest).
+2. Copy `openapi/api.yaml` and `pkg/zenclient/proto/zenbpm.proto` of exactly that commit
+   (`git -C zenbpm show <commit>:openapi/api.yaml`, not the working tree) to
+   `core/src/main/zenbpm/api.yaml` and `core/src/main/proto/zenbpm.proto`, each with a header line
+   naming the commit, its date and the image digest. These copies ARE the contract the adapter is
+   written against (decision 3).
 3. New module `engine-test-support` (artifact `zenbpm-vanillabp-adapter-engine-test-support`, listed
    in the coverage gate's exceptions as a test-only module) holding `EngineUnderTest`: a
    Testcontainers `GenericContainer` on the image, env `REST_API_ADDR=:8080`, `GRPC_API_ADDR=:9090`,
@@ -265,15 +293,20 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
 4. A `logback-test.xml` template quieting `org.testcontainers`, `tc`, `com.github.dockerjava` at WARN,
    to be copied into every module with ITs.
 5. One IT in `engine-test-support` itself: `EngineUnderTestIT` boots the container and asserts
-   `/system/health/ready` answers 200 and `/system/status` names a version equal to the pin.
+   `/system/health/ready` answers 200 and that `git.commitId` of `/system/status` (the engine
+   reports the commit shortened) is a prefix of `zenbpm.commit`. Not `build.version`: on `main` it
+   names the last release's `VERSION` and cannot tell two `main` builds apart.
    `@Testcontainers(disabledWithoutDocker = true)`, `SuppressOutputExtension` FIRST.
 
 **Acceptance criteria**
 
 - [ ] `mvn install` with Docker runs the IT green; without Docker it is skipped, not failed.
-- [ ] The image tag in the log of the IT equals `zenbpm.version`; no test file contains a version.
-- [ ] `api.yaml` and `zenbpm.proto` are present with their provenance header.
-- [ ] README section "Supported engine version" names the pin and says "tested, not newer".
+- [ ] The image in the log of the IT is `zenbpm.image`, the commit the engine reports is
+  `zenbpm.commit`; no test file contains a commit, digest or version.
+- [ ] `api.yaml` and `zenbpm.proto` are present with their provenance header, taken from
+  `zenbpm.commit`.
+- [ ] README section "Supported engine version" names the commit and the digest, says "tested, not
+  newer", and says that the pin is a `main` build until the engine tags a release containing it.
 
 ### S1.2.2 Generate the gRPC stubs from the pinned proto
 
@@ -286,8 +319,9 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
    generated classes) generating Java and gRPC stubs from `src/main/proto/zenbpm.proto` into
    `target/generated-sources/protobuf`, package `org.pbinitiative.zenbpmadapter.client.grpc` (set
    `option java_package` in the copied proto; the header names this as the one deliberate edit).
-2. Spotless excludes generated sources; JaCoCo excludes `io/vanillabp/zenbpm/client/grpc/**` (the
-   report would otherwise count unused stub methods as missed).
+2. Spotless excludes generated sources; JaCoCo excludes
+   `org/pbinitiative/zenbpmadapter/client/grpc/**` (the report would otherwise count unused stub
+   methods as missed).
 3. A unit test `ZenBpmGrpcStubsTest` asserting the stub class `ZenBpmGrpc` has the `JobStream`
    method descriptor (proves the generation ran, and fails when the proto is replaced by one which
    renamed it).
