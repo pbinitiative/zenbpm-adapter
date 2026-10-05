@@ -163,14 +163,23 @@ and the two `zenbpm-*` skills already are.
 
 **Acceptance criteria**
 
-- [ ] `git status` of the superproject shows no new tracked path and no gitlink for either
+- [x] `git status` of the superproject shows no new tracked path and no gitlink for either
   pbinitiative repository; `git -C zenbpm-vanillabp-adapter pull` advances the adapter on `main`.
-- [ ] The local `.gitmodules` names `main` for both pbinitiative entries.
-- [ ] `zenbpm-vanillabp-adapter.wiki/` is checked out and ignored by the superproject.
-- [ ] Where the devcontainer config was changed, it builds the adapter after the platform (verify by
+- [x] The local `.gitmodules` names `main` for both pbinitiative entries.
+- [x] `zenbpm-vanillabp-adapter.wiki/` is checked out and ignored by the superproject.
+- [x] Where the devcontainer config was changed, it builds the adapter after the platform (verify by
   reading the config; a spawn is optional).
-- [ ] Both skill changes are drafted locally; the "built on PEA" sentence is gone or marked
+- [x] Both skill changes are drafted locally; the "built on PEA" sentence is gone or marked
   superseded in the local copy.
+
+**Done 2026-10-05** in the maintainer's workspace, nothing committed to the superproject:
+`.gitmodules` says `main` for `zenbpm` and `zenbpm-vanillabp-adapter`; the wiki (one `Home` page) is
+cloned and ignored by the top-level `/*`; the root `AGENTS.md` names the adapter and its wiki as
+local members; the devcontainer config was left unchanged (optional step, not used). In the skills,
+`vanillabp-bpms-characteristics` has a ZenBPM section and cheat-sheet column with the facts of
+`analysis/01-zenbpm-capabilities.md`, and `vanillabp-adapter-building` names the repository, its
+organisation and groupId and the raw-XML model type. The "built on the PEA adapter" sentence had
+already been replaced upstream by "native, like the Camunda adapters".
 
 ---
 
