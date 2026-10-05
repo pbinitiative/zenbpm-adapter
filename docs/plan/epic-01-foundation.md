@@ -37,15 +37,18 @@ wiki sentence promising behaviour names the test which holds it.
 1. In the existing checkout: keep `LICENSE` (MIT); add `LICENSE-APACHE-2.0` (the Apache licence
    text) and a `NOTICE` naming `vanillabp/camunda8-adapter` and
    `vanillabp/process-engine-api-adapter` as the origin of adapted code (draft decision 17); copy
-   from `camunda8-adapter`: `readme/` (replace the VanillaBP headline by a ZenBPM one or drop it),
-   `formatting_conventions.xml`, the Maven parts of `.gitignore` (merge into the existing Java one,
-   keep `/zenbpm-vanillabp-adapter.iml`), `test-coverage-report/` (three modules). Rename every
-   `camunda8`/`Camunda8` occurrence; every copied Java file keeps its Apache header, every new file
-   gets an MIT header. The workflows are F1.3, not copied here.
+   from `camunda8-adapter`: `formatting_conventions.xml`, the Maven parts of `.gitignore` (merge
+   into the existing Java one, keep `/zenbpm-vanillabp-adapter.iml`), `test-coverage-report/` (three
+   modules). Rename every `camunda8`/`Camunda8` occurrence. The Camunda 8 Java files carry no
+   header, so a copied Java file gets one naming its origin with `SPDX-License-Identifier:
+   Apache-2.0`, and every new file gets the MIT header (`AGENTS.md` shows both). `readme/` is not
+   copied: it holds the VanillaBP headline and the Phactum logo, and this README shows no images.
+   The workflows are F1.3, not copied here.
 2. Root `pom.xml`: groupId `org.pbinitiative.zenbpm` (the group of the engine's Java client; the
    root package stays `org.pbinitiative.zenbpmadapter`), artifactId
    `zenbpm-vanillabp-adapter-parent`, version `${revision}` with
-   `<revision>2.0.0-SNAPSHOT</revision>`, `flatten-maven-plugin` (`resolveCiFriendliesOnly`),
+   `<revision>2.0.0-SNAPSHOT</revision>`, `flatten-maven-plugin` in mode `oss` (the published POM
+   stands on its own: no parent, every version written out, as `camunda8-adapter` does it),
    modules `core`, `spring-boot`, `smoke-test`, `quarkus/runtime`, `quarkus/deployment`,
    `quarkus/integration-tests`, `test-coverage-report`. Import the Spring Boot BOM and the Quarkus
    BOM in the versions the platform uses (read them from `adapter-platform-integration/pom.xml` at
@@ -62,7 +65,9 @@ wiki sentence promising behaviour names the test which holds it.
 4. `core/pom.xml`: artifactId `zenbpm-vanillabp-adapter`, dependencies `vanillabp-adapter-spi`,
    `spi-for-java`, `slf4j-api`, `jackson-databind` (provided by both platforms; declare it `compile`
    here, the platforms manage the version), `grpc-netty-shaded`, `grpc-protobuf`, `grpc-stub`,
-   `protobuf-java`, `lombok` optional; resource filtering on for
+   `protobuf-java`, `lombok` `provided` (Maven does not copy the optional flag out of a
+   `dependencyManagement`, so `optional` would leave Lombok in the published POM); resource
+   filtering on for
    `META-INF/vanillabp/adapter-zenbpm.properties`:
 
    ```properties
@@ -96,8 +101,9 @@ wiki sentence promising behaviour names the test which holds it.
 
 - `test-coverage-report/coverage-gate`: `CoverageGateTest` (with `@PrintsWhenPassing`) and
   `TestClassConventionsTest`, copied from Camunda 8. With no production code the gate has nothing to
-  measure; make sure it reports "no classes" as green rather than dividing by zero (check how the
-  Camunda 8 gate behaves on an empty report and adjust).
+  measure. The Camunda 8 gate reads an empty report as 0 % and would fail; here the two threshold
+  tests print why and are reported as skipped, like a run which stops before `verify`, so an empty
+  report neither fails the build nor reads as a checked one. `PublishedPomsTest` comes along too.
 
 **Acceptance criteria**
 
@@ -194,22 +200,34 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
    until then a maintainer's own PAT is stored as the two repository secrets
    `VANILLABP_PACKAGES_USER` and `VANILLABP_PACKAGES_TOKEN`).
 2. `.github/workflows/checks.yaml`, `on: [pull_request, push: {branches: [main]},
-   workflow_dispatch]`, `concurrency` cancelling in-progress runs per ref, `permissions: contents:
-   read`. One job `build` on `ubuntu-latest` (Docker is available there): `actions/checkout@v7`,
-   `actions/setup-java@v6` (Temurin 21, `cache: maven`), `docker login ghcr.io` with the workflow's
-   `GITHUB_TOKEN` (pulls of the public engine image stay under the rate limit), then `mvn -B -s
-   .github/workflows/settings.xml --update-snapshots install` (this runs Spotless `check`, unit tests,
-   the ITs once E4 adds them, and the coverage gate). On failure upload
-   `**/target/surefire-reports`, `**/target/failsafe-reports` and `**/target/site/jacoco*` as an
-   artifact (`actions/upload-artifact@v4`), the way `process-engine-api-adapter` does.
+   workflow_dispatch]`, `concurrency` per ref cancelling in-progress runs on pull requests only (a
+   commit on `main` keeps its result), `permissions: contents: read`. One job `build` on
+   `ubuntu-latest` (Docker is available there) with `timeout-minutes: 45`: `actions/checkout@v7`
+   with `persist-credentials: false`, `actions/setup-java@v6` (Temurin 25.0.4, `cache: maven`; the
+   classes are compiled with `--release 21`, as in the VanillaBP repositories),
+   `docker/login-action` for `ghcr.io` with the workflow's `GITHUB_TOKEN` (pulls of the public
+   engine image stay under the rate limit), then `mvn -B -s .github/workflows/settings.xml
+   --update-snapshots install` (this runs Spotless `check`, unit tests, the ITs once E4 adds them,
+   and the coverage gate). The package token is handed to that step only. A pull request from a fork
+   gets no secrets; there the job builds `spi-for-java` and `adapter-platform-integration` from
+   source (`install -DskipTests`) and runs the build without the settings file. On failure upload
+   `**/target/surefire-reports`, `**/target/failsafe-reports`, `**/target/site/jacoco*` and
+   `test-coverage-report/*/report` as the artifact `test-reports` (`actions/upload-artifact@v7`,
+   `if-no-files-found: warn`), the way `process-engine-api-adapter` does. The same job runs a second
+   time on Temurin 21 (`build on Java 21`, not required), because compiling with `--release 21` does
+   not prove that the dependencies run on 21. A second job `workflow-lint` runs `actionlint` over
+   the workflows, which Spotless does not read.
 3. Branch protection on `main` requires the `build` check (documented in the README's "Contributing"
    section; the setting itself is done in the repository settings by a maintainer).
 4. The README gets a build badge for `checks.yaml`.
 
 **Acceptance criteria**
 
-- [ ] A pull request with the S1.1.1 skeleton is green, and the log shows `io.vanillabp:*` resolved
-  from `maven.pkg.github.com`.
+- [ ] A pull request with the S1.1.1 skeleton is green on a runner with an empty Maven cache,
+  without building the VanillaBP snapshots from source. The log cannot show the downloads (the build
+  runs with `--no-transfer-progress`), but no `io.vanillabp` `2.0.0-SNAPSHOT` exists on Maven
+  Central, so such a run can only have read them from `maven.pkg.github.com` with the token.
+- [ ] The fork path (no package token) is green: proven by a pull request from a fork.
 - [ ] A deliberately misformatted file on a branch turns the check red at the Spotless step.
 - [ ] The failure artifact is uploaded on a red run (prove it once with the misformatted branch plus a
   failing test).
@@ -227,7 +245,8 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
    `https://maven.pkg.github.com/pbinitiative/zenbpm-vanillabp-adapter` (the
    `distributionManagement` of the root POM names it; the `GITHUB_TOKEN` authenticates through a
    second `<server id="github">` in the same settings file), then publish
-   `test-coverage-report/spring-boot/target/site/jacoco-aggregate` and the Quarkus twin to GitHub
+   `test-coverage-report/spring-boot/report` and the Quarkus twin (the `outputDirectory` of both
+   report POMs, not `target/site`) to GitHub
    Pages as `spring-boot-report/` and `quarkus-report/` (`actions/upload-pages-artifact` +
    `actions/deploy-pages`, Pages source "GitHub Actions").
 2. The README gets the two coverage badges reading

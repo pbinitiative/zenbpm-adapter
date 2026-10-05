@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.pbinitiative.zenbpm</groupId>
+    <artifactId>zenbpm-vanillabp-adapter-parent</artifactId>
+    <version>${revision}</version>
+  </parent>
+
+  <artifactId>zenbpm-vanillabp-adapter-test-coverage-report</artifactId>
+  <packaging>pom</packaging>
+  <name>VanillaBP adapter for ZenBPM - Test coverage report</name>
+  <description>Aggregator of the per-platform test coverage reports. Coverage is measured separately for each platform since a platform's tests never cover the other platform's code.</description>
+
+  <modules>
+    <module>quarkus</module>
+    <module>spring-boot</module>
+    <!-- last: it judges the reports the two modules above produced -->
+    <module>coverage-gate</module>
+  </modules>
+
+  <properties>
+    <!-- nothing to publish - the reports go to GitHub Pages -->
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
+</project>

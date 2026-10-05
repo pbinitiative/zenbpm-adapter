@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" child.project.url.inherit.append.path="false" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.pbinitiative.zenbpm</groupId>
+  <artifactId>zenbpm-vanillabp-adapter-parent</artifactId>
+  <version>${revision}</version>
+  <packaging>pom</packaging>
+  <name>VanillaBP adapter for ZenBPM</name>
+  <description>VanillaBP adapter for the ZenBPM engine (VanillaBP Version 2)</description>
+  <!-- Every artifact points at the repository itself. A child inherits this address and
+       the three <scm> ones with its own name appended unless it is told not to, which
+       would advertise a page per module that does not exist. The four
+       'inherit.append.path' attributes turn the appending off. -->
+  <url>https://github.com/pbinitiative/zenbpm-vanillabp-adapter</url>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/license/mit</url>
+      <distribution>repo</distribution>
+      <comments>Files adapted from the VanillaBP adapters keep the Apache License, Version 2.0, see NOTICE and decision 17 in the repository's DECISIONS.md.</comments>
+    </license>
+  </licenses>
+  <!-- One entry on purpose: Maven reads several <license> entries as alternatives a user may
+       choose between, and "MIT or Apache 2.0" would be wrong for an adapted file. While no
+       adapted file ships in a published jar (today only test classes are adapted), MIT is
+       also the whole truth. The first story which copies production code from a VanillaBP
+       adapter decides how the published POMs say "MIT and Apache 2.0"; the jars already
+       carry both licence texts and the NOTICE, see <resources> below. -->
+
+  <developers>
+    <developer>
+      <id>pbinitiative</id>
+      <organization>Process Builders Initiative</organization>
+      <organizationUrl>https://github.com/pbinitiative</organizationUrl>
+    </developer>
+  </developers>
+
+  <modules>
+    <module>core</module>
+    <module>spring-boot</module>
+    <module>smoke-test</module>
+    <module>quarkus/runtime</module>
+    <module>quarkus/deployment</module>
+    <module>quarkus/integration-tests</module>
+    <!-- last: its gate judges what every module above produced -->
+    <module>test-coverage-report</module>
+  </modules>
+
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+    <connection>scm:git:https://github.com/pbinitiative/zenbpm-vanillabp-adapter.git</connection>
+    <developerConnection>scm:git:https://github.com/pbinitiative/zenbpm-vanillabp-adapter.git</developerConnection>
+    <url>https://github.com/pbinitiative/zenbpm-vanillabp-adapter/tree/main</url>
+  </scm>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <version.java>21</version.java>
+    <!-- The version of every artifact, resolved into the published POMs by the flatten
+         plugin. A plain 'mvn install' builds 2.0.0-SNAPSHOT; a release sets -Drevision. -->
+    <revision>2.0.0-SNAPSHOT</revision>
+    <!-- where the build breaks, in PERCENT of covered instructions per platform, enforced
+         by test-coverage-report/coverage-gate. The gate stands at 85, the same number in
+         every VanillaBP adapter, because a threshold marks the point where somebody has to
+         look and not the goal to aim at. The rule is 90 per platform, the number the
+         coverage badges of the README are read against. Neither is ever moved to make a
+         build pass. -->
+    <coverage.threshold.spring-boot>85</coverage.threshold.spring-boot>
+    <coverage.threshold.quarkus>85</coverage.threshold.quarkus>
+    <coverage.rule>90</coverage.rule>
+    <jacoco.version>0.8.15</jacoco.version>
+    <lombok.version>1.18.48</lombok.version>
+    <spi-for-java.version>2.0.0-SNAPSHOT</spi-for-java.version>
+    <adapter-platform.version>2.0.0-SNAPSHOT</adapter-platform.version>
+    <!-- The two platform BOMs, in the versions adapter-platform-integration imports
+         (spring-boot-integration/pom.xml and quarkus-integration/pom.xml there). They move
+         together with the platform version above, never on their own. -->
+    <springboot.version>4.1.1</springboot.version>
+    <quarkus.version>3.40.0</quarkus.version>
+    <!-- gRPC and protobuf for the job stream. Both platforms manage them, in different
+         versions: Spring Boot 4.1.1 manages grpc 1.83.1 and protobuf 4.35.1, Quarkus 3.40.0
+         manages grpc 1.81.0 and protobuf 4.35.0. The adapter is compiled against the OLDER
+         of the two, so nothing it uses is missing on either platform; protobuf in
+         particular refuses a runtime older than the code generated against it. The entries
+         stand BEFORE the BOM imports below, because the first declaration wins. -->
+    <grpc.version>1.81.0</grpc.version>
+    <protobuf.version>4.35.0</protobuf.version>
+    <testcontainers.version>2.0.5</testcontainers.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>${grpc.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${springboot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-bom</artifactId>
+        <version>${quarkus.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.vanillabp</groupId>
+        <artifactId>spi-for-java</artifactId>
+        <version>${spi-for-java.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vanillabp</groupId>
+        <artifactId>vanillabp-adapter-spi</artifactId>
+        <version>${adapter-platform.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vanillabp</groupId>
+        <artifactId>vanillabp-spring-boot-integration</artifactId>
+        <version>${adapter-platform.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vanillabp</groupId>
+        <artifactId>vanillabp-quarkus-integration</artifactId>
+        <version>${adapter-platform.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vanillabp</groupId>
+        <artifactId>vanillabp-quarkus-integration-deployment</artifactId>
+        <version>${adapter-platform.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vanillabp</groupId>
+        <artifactId>test-utils</artifactId>
+        <version>${adapter-platform.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-junit-jupiter</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
+      <!-- 'provided' here and again at every declaration: Lombok translates the source
+           and has no work left once the class file exists, so no application using our
+           artifacts may find it on its runtime classpath. 'optional' would not do that,
+           because Maven does not copy the optional flag out of a dependencyManagement. -->
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+        <scope>provided</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <!-- Both licence texts and the NOTICE go into META-INF/ of every jar and every sources
+         jar, because Apache 2.0 asks for them wherever adapted code is redistributed, and an
+         artifact travels without the repository around it. As a resource rather than a copy
+         step, because the sources jar packs the declared resources only. A module which
+         declares <resources> of its own (core, for filtering) repeats this entry.
+         PublishedJarsTest in the coverage gate checks the archives. -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <targetPath>META-INF</targetPath>
+        <directory>${maven.multiModuleProjectDirectory}</directory>
+        <includes>
+          <include>LICENSE</include>
+          <include>LICENSE-APACHE-2.0</include>
+          <include>NOTICE</include>
+        </includes>
+      </resource>
+    </resources>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.6.0</version>
+          <configuration>
+            <!-- '@{jacoco.agent}' is resolved lazily per module (late property binding),
+                 forwarding coverage also into forked JVMs -->
+            <argLine>@{jacoco.agent}</argLine>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>3.6.0</version>
+          <configuration>
+            <argLine>@{jacoco.agent}</argLine>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.16.0</version>
+          <configuration>
+            <release>${version.java}</release>
+            <compilerArgs>
+              <!-- every javadoc group is checked by javac except 'missing': a comment
+                   which was never written is a warning, not a broken build -->
+              <arg>-Xdoclint:all,-missing</arg>
+            </compilerArgs>
+            <annotationProcessorPaths>
+              <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+              </path>
+            </annotationProcessorPaths>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.12.0</version>
+          <configuration>
+            <!-- javadoc runs in every build, so the release is not the moment it is found
+                 broken. It breaks on errors and on warnings: what this repository publishes
+                 is read by applications, and a missing sentence is a gap for them. The
+                 modules which publish nothing switch it off in their POMs. -->
+            <doclint>all</doclint>
+            <failOnError>true</failOnError>
+            <failOnWarnings>true</failOnWarnings>
+            <!-- no links fetched over the network: the check gives the same answer on a
+                 machine without one -->
+            <detectJavaApiLink>false</detectJavaApiLink>
+            <detectOfflineLinks>false</detectOfflineLinks>
+            <!-- javadoc stops after 100 warnings per module and the last line reads like
+                 the end of the list -->
+            <additionalOptions>
+              <additionalOption>-Xmaxwarns 100000</additionalOption>
+            </additionalOptions>
+          </configuration>
+          <executions>
+            <execution>
+              <id>check-javadoc</id>
+              <goals>
+                <goal>javadoc-no-fork</goal>
+              </goals>
+              <!-- after the tests, so a javadoc error does not hide a test result -->
+              <phase>package</phase>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+      <!-- the sources jar every build attaches, so an IDE shows the source of a snapshot
+           rather than decompiled code -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.4.0</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- The POM a consumer reads has to stand on its own: the 'oss' mode writes every
+           version into it, drops the parent and with it our dependencyManagement, and keeps
+           what a public repository asks for (name, description, licence, developers). So no
+           application resolves anything out of our build's choices, the gRPC and protobuf
+           versions above included. -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.8.0</version>
+        <configuration>
+          <updatePomFile>true</updatePomFile>
+          <flattenMode>oss</flattenMode>
+          <pomElements>
+            <!-- where we deploy is nothing a user of the artifact can act on -->
+            <distributionManagement>remove</distributionManagement>
+          </pomElements>
+        </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+            <phase>process-resources</phase>
+          </execution>
+          <execution>
+            <id>flatten-clean</id>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <phase>clean</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <configuration>
+          <propertyName>jacoco.agent</propertyName>
+          <excludes>
+            <exclude>**/it/**</exclude>
+            <exclude>**/test/**</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>3.10.3</version>
+        <configuration>
+          <pom>
+            <includes>
+              <include>**/pom.xml</include>
+            </includes>
+            <excludes>
+              <exclude>**/target/**/</exclude>
+              <exclude>**/.github/**/</exclude>
+            </excludes>
+            <sortPom>
+              <quiet>true</quiet>
+            </sortPom>
+          </pom>
+          <markdown>
+            <includes>
+              <include>**/*.md</include>
+            </includes>
+            <excludes>
+              <exclude>**/target/**/</exclude>
+              <exclude>**/.github/**/</exclude>
+              <!-- the plan is prose kept at 100 columns by hand and carries the
+                   maintainers' own notes; the formatter would rewrap it -->
+              <exclude>docs/**</exclude>
+            </excludes>
+            <flexmark/>
+          </markdown>
+          <yaml>
+            <includes>
+              <include>**/*.yaml</include>
+            </includes>
+            <excludes>
+              <exclude>**/target/**/</exclude>
+              <!-- the workflows carry comments, and the YAML formatter round-trips through
+                   Jackson, which drops them -->
+              <exclude>**/.github/**/</exclude>
+              <!-- copies of the engine's API contract, kept byte for byte as the engine
+                   wrote them -->
+              <exclude>**/src/main/zenbpm/**</exclude>
+            </excludes>
+            <jackson>
+              <yamlFeatures>
+                <MINIMIZE_QUOTES>true</MINIMIZE_QUOTES>
+                <WRITE_DOC_START_MARKER>false</WRITE_DOC_START_MARKER>
+                <INDENT_ARRAYS_WITH_INDICATOR>true</INDENT_ARRAYS_WITH_INDICATOR>
+              </yamlFeatures>
+            </jackson>
+          </yaml>
+          <java>
+            <includes>
+              <include>src/main/java/**/*.java</include>
+              <include>src/test/java/**/*.java</include>
+            </includes>
+            <excludes>
+              <!-- the gRPC stubs generated from the engine's proto -->
+              <exclude>**/generated-sources/**</exclude>
+            </excludes>
+            <eclipse>
+              <file>${maven.multiModuleProjectDirectory}/formatting_conventions.xml</file>
+              <version>4.35</version>
+            </eclipse>
+            <removeUnusedImports/>
+            <importOrder>
+              <order>java,javax,org,com,at.phactum</order>
+            </importOrder>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>process-sources</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

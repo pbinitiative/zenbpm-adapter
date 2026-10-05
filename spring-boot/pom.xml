@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.pbinitiative.zenbpm</groupId>
+    <artifactId>zenbpm-vanillabp-adapter-parent</artifactId>
+    <version>${revision}</version>
+  </parent>
+
+  <artifactId>zenbpm-vanillabp-adapter-spring-boot</artifactId>
+  <name>VanillaBP adapter for ZenBPM - Spring Boot</name>
+  <description>Spring Boot auto-configuration of the VanillaBP adapter for ZenBPM</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.pbinitiative.zenbpm</groupId>
+      <artifactId>zenbpm-vanillabp-adapter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.vanillabp</groupId>
+      <artifactId>vanillabp-spring-boot-integration</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+</project>

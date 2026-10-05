@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.pbinitiative.zenbpm</groupId>
+    <artifactId>zenbpm-vanillabp-adapter-parent</artifactId>
+    <version>${revision}</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>zenbpm-vanillabp-adapter-quarkus-integration-tests</artifactId>
+  <name>VanillaBP adapter for ZenBPM - Quarkus extension - Integration tests</name>
+  <description>End-to-end tests running the adapter's documented features on a booted Quarkus application against a real ZenBPM engine.</description>
+
+  <properties>
+    <!-- nothing to publish - this module only tests -->
+    <maven.install.skip>true</maven.install.skip>
+    <maven.deploy.skip>true</maven.deploy.skip>
+    <maven.javadoc.skip>true</maven.javadoc.skip>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.vanillabp</groupId>
+      <artifactId>vanillabp-quarkus-integration</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.pbinitiative.zenbpm</groupId>
+      <artifactId>zenbpm-vanillabp-adapter-quarkus</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>

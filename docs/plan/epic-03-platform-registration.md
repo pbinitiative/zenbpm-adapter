@@ -97,7 +97,11 @@ always from the core properties.
    (`List<AdapterDeploymentService<Object, Object>>`, collaborators via
    `AdapterCollaboratorsSupport.collaborators(...)`), `ZenBpmStartupObserver` observing
    `StartupEvent` and touching the registry so validation runs before the platform's deployment
-   runner.
+   runner. Note on versions: the root POM imports the Spring Boot BOM before the Quarkus BOM, so a
+   library both manage (Jackson, Netty, SLF4J, ...) resolves to Spring Boot's version in the Quarkus
+   modules too. A Quarkus application runs the Quarkus versions. Where a Quarkus test or the native
+   image depends on the exact version, pin it in the Quarkus module, as `camunda8-adapter` does with
+   `netty.version.quarkus`.
 2. `quarkus/deployment` (artifact `zenbpm-vanillabp-adapter-quarkus-deployment`):
    `ZenBpmIntegrationProcessor` with `FeatureBuildItem("vanillabp-zenbpm")`,
    `VanillaBpMigratableProcessServiceBuildItem` and `VanillaBpAdapterDeploymentServiceBuildItem`
