@@ -174,12 +174,16 @@ and the two `zenbpm-*` skills already are.
 
 **Done 2026-10-05** in the maintainer's workspace, nothing committed to the superproject:
 `.gitmodules` says `main` for `zenbpm` and `zenbpm-vanillabp-adapter`; the wiki (one `Home` page) is
-cloned and ignored by the top-level `/*`; the root `AGENTS.md` names the adapter and its wiki as
-local members; the devcontainer config was left unchanged (optional step, not used). In the skills,
-`vanillabp-bpms-characteristics` has a ZenBPM section and cheat-sheet column with the facts of
-`analysis/01-zenbpm-capabilities.md`, and `vanillabp-adapter-building` names the repository, its
-organisation and groupId and the raw-XML model type. The "built on the PEA adapter" sentence had
-already been replaced upstream by "native, like the Camunda adapters".
+cloned and ignored by the top-level `/*`; the root `AGENTS.md` (itself an ignored local file) names
+the adapter and its wiki as local members; the devcontainer config was left unchanged (optional
+step, not used). `.gitignore` stays as the superproject has it: the only local ignores, the two
+`zenbpm-*` skills, are in `.git/info/exclude`, which git never commits. The `.gitmodules` entries
+remain an uncommitted edit of a tracked file, so `git commit -a` in the superproject would pick them
+up; commit there by naming paths. In the skills, `vanillabp-bpms-characteristics` has a ZenBPM
+section and cheat-sheet column with the facts of `analysis/01-zenbpm-capabilities.md`, and
+`vanillabp-adapter-building` names the repository, its organisation and groupId and the raw-XML
+model type. The "built on the PEA adapter" sentence had already been replaced upstream by "native,
+like the Camunda adapters".
 
 ---
 
@@ -263,22 +267,27 @@ The ruleset on `main` (created 2026-10-04) requires `build` and a pull request.
 **Instructions**
 
 1. `.github/workflows/publish-snapshots.yaml`, `on: push: {branches: [main]}` and
-   `workflow_dispatch`, `permissions: contents: read` at the top, `concurrency` that never cancels a
-   publish. Job `publish` (`packages: write`, `timeout-minutes: 45`, checkout without persisted
-   credentials, the JDK and `docker/login-action` of `checks.yaml`): a step failing with a message
-   naming the two secrets when the package token is missing, then ONE
-   `mvn -s .github/workflows/settings.xml --update-snapshots deploy`. The root POM pins
+   `workflow_dispatch`, `permissions: contents: read` at the top, `concurrency` that does not cancel
+   a running publish (a cancelled upload would leave the modules' metadata pointing at different
+   builds; a run still waiting is replaced by a newer push, which is harmless). Job `publish` runs
+   on `main` only, also when dispatched (`if: github.ref == 'refs/heads/main'`), with `packages:
+   write`, `timeout-minutes: 45`, checkout without persisted credentials and the JDK of
+   `checks.yaml`, but no ghcr.io login: in this job the token may write packages, and no test pulls
+   the engine image yet (S1.2.1 adds the first one and decides on the login there). A step fails
+   with a message naming the two secrets when either is missing, then ONE `mvn -s
+   .github/workflows/settings.xml --update-snapshots deploy`. The root POM pins
    `maven-deploy-plugin` 3.1.4 with `deployAtEnd`, so nothing is uploaded unless the last module,
-   the coverage gate, passed (instead of the plan's earlier `install` followed by
-   `deploy -DskipTests`, which builds twice and still uploads per module). The target is
+   the coverage gate, passed (instead of the plan's earlier `install` followed by `deploy
+   -DskipTests`, which builds twice and still uploads per module). The target is
    `https://maven.pkg.github.com/pbinitiative/zenbpm-vanillabp-adapter` (the
    `distributionManagement` of the root POM), authenticated with the `GITHUB_TOKEN` through a second
-   `<server id="github">` in the settings file; the VanillaBP secrets and the `GITHUB_TOKEN` reach
-   that one step only. Then `test-coverage-report/spring-boot/report` and the Quarkus twin (the
-   `outputDirectory` of both report POMs, not `target/site`) go to GitHub Pages as
-   `spring-boot-report/` and `quarkus-report/` (`actions/upload-pages-artifact`, and
-   `actions/deploy-pages` in a second job which alone gets `pages: write` and `id-token: write`;
-   Pages source "GitHub Actions", the `github-pages` environment accepts `main` only).
+   `<server id="github">` in the settings file; the VanillaBP secrets reach that one step only, the
+   `GITHUB_TOKEN` otherwise only `actions/checkout`, which does not keep it. Then
+   `test-coverage-report/spring-boot/report` and the Quarkus twin (the `outputDirectory` of both
+   report POMs, not `target/site`) go to GitHub Pages as `spring-boot-report/` and `quarkus-report/`
+   (`actions/upload-pages-artifact`, and `actions/deploy-pages` in a second job which alone gets
+   `pages: write` and `id-token: write`; Pages source "GitHub Actions", the `github-pages`
+   environment accepts `main` only).
 2. The README gets the two coverage badges reading
    `https://pbinitiative.github.io/zenbpm-vanillabp-adapter/spring-boot-report/index.html` and
    `.../quarkus-report/index.html`. Not with the regex of the Camunda 8 badges: that one needs a
@@ -352,7 +361,11 @@ one commit. When the engine tags a release containing the pinned commit, the pin
    `SuppressOutputExtension`.
 4. A `logback-test.xml` template quieting `org.testcontainers`, `tc`, `com.github.dockerjava` at WARN,
    to be copied into every module with ITs.
-5. One IT in `engine-test-support` itself: `EngineUnderTestIT` boots the container and asserts
+5. The first test pulling `ghcr.io/pbinitiative/zenbpm` arrives with this story. `checks.yaml` logs
+   in to ghcr.io already; `publish-snapshots.yaml` deliberately does not (its token may write
+   packages, see S1.3.2). Decide in this story whether its anonymous pull is enough or whether it
+   gets a login with a token which can only read.
+6. One IT in `engine-test-support` itself: `EngineUnderTestIT` boots the container and asserts
    `/system/health/ready` answers 200 and that `git.commitId` of `/system/status` (the engine
    reports the commit shortened) is a prefix of `zenbpm.commit`. Not `build.version`: on `main` it
    names the last release's `VERSION` and cannot tell two `main` builds apart.
