@@ -263,27 +263,44 @@ The ruleset on `main` (created 2026-10-04) requires `build` and a pull request.
 **Instructions**
 
 1. `.github/workflows/publish-snapshots.yaml`, `on: push: {branches: [main]}` and
-   `workflow_dispatch`,
-   `permissions: {contents: read, packages: write, pages: write, id-token: write}`: build as in
-   S1.3.1, then `mvn -B -s .github/workflows/settings.xml deploy -DskipTests` to
+   `workflow_dispatch`, `permissions: contents: read` at the top, `concurrency` that never cancels a
+   publish. Job `publish` (`packages: write`, `timeout-minutes: 45`, checkout without persisted
+   credentials, the JDK and `docker/login-action` of `checks.yaml`): a step failing with a message
+   naming the two secrets when the package token is missing, then ONE
+   `mvn -s .github/workflows/settings.xml --update-snapshots deploy`. The root POM pins
+   `maven-deploy-plugin` 3.1.4 with `deployAtEnd`, so nothing is uploaded unless the last module,
+   the coverage gate, passed (instead of the plan's earlier `install` followed by
+   `deploy -DskipTests`, which builds twice and still uploads per module). The target is
    `https://maven.pkg.github.com/pbinitiative/zenbpm-vanillabp-adapter` (the
-   `distributionManagement` of the root POM names it; the `GITHUB_TOKEN` authenticates through a
-   second `<server id="github">` in the same settings file), then publish
-   `test-coverage-report/spring-boot/report` and the Quarkus twin (the `outputDirectory` of both
-   report POMs, not `target/site`) to GitHub
-   Pages as `spring-boot-report/` and `quarkus-report/` (`actions/upload-pages-artifact` +
-   `actions/deploy-pages`, Pages source "GitHub Actions").
+   `distributionManagement` of the root POM), authenticated with the `GITHUB_TOKEN` through a second
+   `<server id="github">` in the settings file; the VanillaBP secrets and the `GITHUB_TOKEN` reach
+   that one step only. Then `test-coverage-report/spring-boot/report` and the Quarkus twin (the
+   `outputDirectory` of both report POMs, not `target/site`) go to GitHub Pages as
+   `spring-boot-report/` and `quarkus-report/` (`actions/upload-pages-artifact`, and
+   `actions/deploy-pages` in a second job which alone gets `pages: write` and `id-token: write`;
+   Pages source "GitHub Actions", the `github-pages` environment accepts `main` only).
 2. The README gets the two coverage badges reading
    `https://pbinitiative.github.io/zenbpm-vanillabp-adapter/spring-boot-report/index.html` and
-   `.../quarkus-report/index.html` with the regex of the Camunda 8 badges.
+   `.../quarkus-report/index.html`. Not with the regex of the Camunda 8 badges: that one needs a
+   number followed by `%` and finds nothing while a report holds no instruction (JaCoCo writes
+   `n/a`). The badge reads the first column after `Total` instead, which is instruction coverage and
+   is either `NN%` or `n/a`.
 3. Consumers of the snapshot need the same kind of token for `pbinitiative`'s packages; the README's
-   coordinates section says so and shows the `settings.xml` snippet.
+   section "Using the snapshots" says so and shows the `settings.xml` snippet.
 
 **Acceptance criteria**
 
 - [ ] After a push to `main`, `zenbpm-vanillabp-adapter-parent:2.0.0-SNAPSHOT` is listed under the
   repository's Packages and both report pages answer.
 - [ ] The badges render on the README.
+- [x] A red coverage gate publishes nothing. Proven before the merge with
+  `mvn deploy -DaltDeploymentRepository=github::file://...` and an untested method in the core: the
+  build failed at the gate and the target directory stayed empty, while the green build deployed
+  the parent, the core, `spring-boot`, `quarkus` and `quarkus-deployment` (jar, sources jar, POM)
+  and nothing of the test, report and gate modules.
+- [x] The badge regex reads `94%` from the live Camunda 8 report through shields.io, and `0%` and
+  `n/a` from a report of this repository with and without an instruction (checked before the
+  merge).
 
 ---
 

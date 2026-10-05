@@ -54,6 +54,18 @@
     <url>https://github.com/pbinitiative/zenbpm-vanillabp-adapter/tree/main</url>
   </scm>
 
+  <!-- Where the snapshots of main go: this repository's GitHub Packages registry, written by
+       .github/workflows/publish-snapshots.yaml with the workflow's own token (server 'github' in
+       .github/workflows/settings.xml). The flatten plugin takes it out of the published POM,
+       because where we deploy is nothing a consumer can act on. -->
+  <distributionManagement>
+    <snapshotRepository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/pbinitiative/zenbpm-vanillabp-adapter</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -238,6 +250,17 @@
                 <version>${lombok.version}</version>
               </path>
             </annotationProcessorPaths>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>3.1.4</version>
+          <configuration>
+            <!-- Nothing is uploaded until the last module of the reactor, the coverage gate, has
+                 passed. Without it every module deploys right after its own build, and a red gate
+                 at the end leaves the core and the platform modules of a failed build published. -->
+            <deployAtEnd>true</deployAtEnd>
           </configuration>
         </plugin>
         <plugin>

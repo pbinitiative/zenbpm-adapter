@@ -13,6 +13,10 @@
   One entry per VanillaBP repository rather than a 'vanillabp/*' wildcard: this is the form
   the VanillaBP adapters' own CI uses. Add a repository when a build here starts to
   resolve an artifact it publishes.
+
+  The server 'github' is the other direction: publish-snapshots.yaml uploads this
+  repository's own snapshots to pbinitiative's GitHub Packages ('distributionManagement'
+  of the root POM) with the workflow's GITHUB_TOKEN, which needs no secret of ours.
 -->
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -72,6 +76,12 @@
             <id>vanillabp-spi-for-java</id>
             <username>${env.VANILLABP_PACKAGES_USER}</username>
             <password>${env.VANILLABP_PACKAGES_TOKEN}</password>
+        </server>
+        <!-- used for 'mvn deploy' by the root POM's distributionManagement -->
+        <server>
+            <id>github</id>
+            <username>${env.GITHUB_ACTOR}</username>
+            <password>${env.GITHUB_TOKEN}</password>
         </server>
     </servers>
 
