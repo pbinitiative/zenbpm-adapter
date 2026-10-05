@@ -270,7 +270,8 @@ The ruleset on `main` (created 2026-10-04) requires `build` and a pull request.
 1. `.github/workflows/publish-snapshots.yaml`, `on: push: {branches: [main]}` and
    `workflow_dispatch`, `permissions: contents: read` at the top, `concurrency` that does not cancel
    a running publish (a cancelled upload would leave the modules' metadata pointing at different
-   builds; a run still waiting is replaced by a newer push, which is harmless). Job `publish` runs
+   builds; a run still waiting is replaced by a newer push, which is harmless; the group carries the
+   ref, so a dispatch on another branch never replaces a waiting run of `main`). Job `publish` runs
    on `main` only, also when dispatched (`if: github.ref == 'refs/heads/main'`), with `packages:
    write`, `timeout-minutes: 45`, checkout without persisted credentials and the JDK of
    `checks.yaml`, but no ghcr.io login: in this job the token may write packages, and no test pulls
@@ -307,10 +308,16 @@ The ruleset on `main` (created 2026-10-04) requires `build` and a pull request.
   `mvn deploy -DaltDeploymentRepository=github::file://...` and an untested method in the core: the
   build failed at the gate and the target directory stayed empty, while the green build deployed
   the parent, the core, `spring-boot`, `quarkus` and `quarkus-deployment` (jar, sources jar, POM)
-  and nothing of the test, report and gate modules.
+  and nothing of the test, report and gate modules. Repeatable since: `bin/check-deploy-safety.sh`
+  does both runs on a copy of the working tree (16 s), and `PublicationSafetyTest` fails every build
+  in which `deployAtEnd` or the gate's place as the last module is gone. Both were seen to fail with
+  `deployAtEnd` switched off: the script found the core's jar, sources jar and POM deployed by a
+  red build.
 - [x] The badge regex reads `94%` from the live Camunda 8 report through shields.io, and `0%` and
   `n/a` from a report of this repository with and without an instruction (checked before the
-  merge).
+  merge). `PublicationSafetyTest` repeats the local half on every build, with each badge's
+  expression taken from the README: `94%`, `0%` and `n/a` footers, and the report the build just
+  wrote.
 
 ---
 

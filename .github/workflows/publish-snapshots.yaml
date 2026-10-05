@@ -15,14 +15,16 @@ concurrency:
   # cancelled: stopped during the deferred upload, it would leave a mixed set behind, with the
   # maven-metadata.xml of some modules pointing at the new build and of others at the old one.
   # A run still WAITING in this group is replaced by a newer push, which is harmless: the newer
-  # push carries the newer artifacts.
-  group: publish-snapshots
+  # push carries the newer artifacts. The ref is part of the group, so a dispatch on another
+  # branch, whose job is skipped below, queues in a group of its own and can never replace a
+  # waiting run of main.
+  group: publish-snapshots-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   publish:
     # A dispatch may name any branch which carries this file. Only main publishes the snapshot
-    # consumers resolve, so a run on another branch does nothing rather than overwrite it with
-    # unreviewed code. (The Pages job below would be refused anyway: its environment accepts
+    # consumers resolve, so on another branch this job is skipped rather than overwrite it with
+    # unreviewed code (and the concurrency group above keeps such a run out of main's queue). (The Pages job below would be refused anyway: its environment accepts
     # main only.)
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

@@ -172,7 +172,15 @@ failing it. All of these are `CoverageGateTest`; the failure paths of the last o
 `ProductionModulesTest`. The conventions every test class of this repository follows are checked by
 `TestClassConventionsTest`, what the published POMs hand an application by `PublishedPomsTest`, and
 that every published jar and sources jar carries `LICENSE`, `LICENSE-APACHE-2.0` and `NOTICE` by
-`PublishedJarsTest`.
+`PublishedJarsTest`. `PublicationSafetyTest` keeps the snapshot publication honest: the deploy is
+deferred until the gate, the last module, has passed, and each coverage badge's expression reads the
+report this build wrote.
+
+`bin/check-deploy-safety.sh` proves the deferred deploy itself, without GitHub: it deploys a copy of
+the working tree into a local directory (exactly the parent, the core, `spring-boot`, `quarkus` and
+`quarkus-deployment` have to arrive), then adds an untested method to the copy and checks that the
+red gate leaves the directory empty. It installs nothing into the local Maven repository. Run it
+after changing anything about deploying, the module order or the gate.
 
 The gate reports what it measured on every run, green ones included. The angle brackets stand for
 the numbers of the run:
