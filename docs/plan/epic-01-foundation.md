@@ -133,9 +133,11 @@ CI (`update-submodules.yml`) never sees them, and a recursive clone of the works
 them. Everything below stays an uncommitted change of the local workspace, as the root `AGENTS.md`
 and the two `zenbpm-*` skills already are.
 
-1. Local `.gitmodules`: both pbinitiative entries say `branch = master`, but the default branch of
-   `zenbpm` and of `zenbpm-vanillabp-adapter` is `main`. Change both to `main`, so the file does not
-   say something wrong, even though no `git submodule` command uses the entries yet.
+1. Local `.gitmodules`: no entries for the pbinitiative repositories. Entries without a gitlink do
+   nothing for `git submodule`, but as an uncommitted edit of a tracked file they would be picked up
+   by `git commit -a` and would stop `git pull` whenever the superproject changes `.gitmodules`. The
+   root `AGENTS.md` documents the local members instead. (Written first as "change both entries to
+   `branch = main`"; dropped after the review of 2026-10-05.)
 2. Wiki: clone `git@github.com:pbinitiative/zenbpm-vanillabp-adapter.wiki.git` next to the adapter
    as `zenbpm-vanillabp-adapter.wiki/` (the wiki exists since 2026-10-04 with a `Home` page). The
    top-level `/*` ignores it like the adapter.
@@ -165,7 +167,7 @@ and the two `zenbpm-*` skills already are.
 
 - [x] `git status` of the superproject shows no new tracked path and no gitlink for either
   pbinitiative repository; `git -C zenbpm-vanillabp-adapter pull` advances the adapter on `main`.
-- [x] The local `.gitmodules` names `main` for both pbinitiative entries.
+- [x] The local `.gitmodules` has no pbinitiative entries (`git diff .gitmodules` is empty).
 - [x] `zenbpm-vanillabp-adapter.wiki/` is checked out and ignored by the superproject.
 - [x] Where the devcontainer config was changed, it builds the adapter after the platform (verify by
   reading the config; a spawn is optional).
@@ -173,17 +175,16 @@ and the two `zenbpm-*` skills already are.
   superseded in the local copy.
 
 **Done 2026-10-05** in the maintainer's workspace, nothing committed to the superproject:
-`.gitmodules` says `main` for `zenbpm` and `zenbpm-vanillabp-adapter`; the wiki (one `Home` page) is
-cloned and ignored by the top-level `/*`; the root `AGENTS.md` (itself an ignored local file) names
-the adapter and its wiki as local members; the devcontainer config was left unchanged (optional
-step, not used). `.gitignore` stays as the superproject has it: the only local ignores, the two
-`zenbpm-*` skills, are in `.git/info/exclude`, which git never commits. The `.gitmodules` entries
-remain an uncommitted edit of a tracked file, so `git commit -a` in the superproject would pick them
-up; commit there by naming paths. In the skills, `vanillabp-bpms-characteristics` has a ZenBPM
-section and cheat-sheet column with the facts of `analysis/01-zenbpm-capabilities.md`, and
-`vanillabp-adapter-building` names the repository, its organisation and groupId and the raw-XML
-model type. The "built on the PEA adapter" sentence had already been replaced upstream by "native,
-like the Camunda adapters".
+`.gitmodules` is the superproject's own again, without pbinitiative entries; the wiki (one `Home`
+page) is cloned and ignored by the top-level `/*`; the root `AGENTS.md` (itself an ignored local
+file) names the adapter and its wiki as local members; the devcontainer config was left unchanged
+(optional step, not used). `.gitignore` stays as the superproject has it: the only local ignores,
+the two `zenbpm-*` skills, are in `.git/info/exclude`, which git never commits. The repository's
+default workflow token permission was set to `read` the same day (both workflows declare their own).
+In the skills, `vanillabp-bpms-characteristics` has a ZenBPM section and cheat-sheet column with the
+facts of `analysis/01-zenbpm-capabilities.md`, and `vanillabp-adapter-building` names the
+repository, its organisation and groupId and the raw-XML model type. The "built on the PEA adapter"
+sentence had already been replaced upstream by "native, like the Camunda adapters".
 
 ---
 
