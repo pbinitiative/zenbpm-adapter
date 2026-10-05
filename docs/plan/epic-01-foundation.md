@@ -107,13 +107,16 @@ wiki sentence promising behaviour names the test which holds it.
 
 **Acceptance criteria**
 
-- [ ] `mvn install` is green from a clean local repository which holds `spi-for-java` and
+- [x] `mvn install` is green from a clean local repository which holds `spi-for-java` and
   `adapter-platform-integration` installed.
-- [ ] `mvn spotless:check` passes; a deliberately misformatted file fails the build.
-- [ ] Both coverage reports and the gate module exist and run.
-- [ ] `META-INF/vanillabp/adapter-zenbpm.properties` in the built core jar carries resolved values.
-- [ ] `DECISIONS.md`, `GAPS.md`, `AGENTS.md`, `README.md`, `UPGRADE.md`, `NOTICE`,
+- [x] `mvn spotless:check` passes; a deliberately misformatted file fails the build.
+- [x] Both coverage reports and the gate module exist and run.
+- [x] `META-INF/vanillabp/adapter-zenbpm.properties` in the built core jar carries resolved values.
+- [x] `DECISIONS.md`, `GAPS.md`, `AGENTS.md`, `README.md`, `UPGRADE.md`, `NOTICE`,
   `LICENSE-APACHE-2.0` exist with the content above.
+
+**Done 2026-10-05**, merged to `main` as `e403ac6` (pull request #2, together with S1.3.1 and the
+answers to two reviews). Checked locally on JDK 25 and JDK 21 and in CI.
 
 ### S1.1.2 Finish the workspace membership, locally
 
@@ -223,14 +226,26 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
 
 **Acceptance criteria**
 
-- [ ] A pull request with the S1.1.1 skeleton is green on a runner with an empty Maven cache,
+- [x] A pull request with the S1.1.1 skeleton is green on a runner with an empty Maven cache,
   without building the VanillaBP snapshots from source. The log cannot show the downloads (the build
   runs with `--no-transfer-progress`), but no `io.vanillabp` `2.0.0-SNAPSHOT` exists on Maven
   Central, so such a run can only have read them from `maven.pkg.github.com` with the token.
-- [ ] The fork path (no package token) is green: proven by a pull request from a fork.
-- [ ] A deliberately misformatted file on a branch turns the check red at the Spotless step.
-- [ ] The failure artifact is uploaded on a red run (prove it once with the misformatted branch plus a
+- [x] The fork path (no package token) is green: proven by a pull request from a fork.
+- [x] A deliberately misformatted file on a branch turns the check red at the Spotless step.
+- [x] The failure artifact is uploaded on a red run (prove it once with the misformatted branch plus a
   failing test).
+
+**Done 2026-10-05**, merged with S1.1.1. The evidence, one run per criterion (GitHub keeps run logs
+for 90 days, so what each run showed is written here as well):
+
+| Criterion | Run | What it showed |
+|---|---|---|
+| Green on an empty Maven cache with the token | [37218953892](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37218953892) | `maven cache is not found`, no from-source step in that revision, `BUILD SUCCESS`: the snapshots came from GitHub Packages |
+| Fork path | [37353630927](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37353630927) | Pull request #4 from the fork `alisku/zenbpm-vanillabp-adapter`: the package token arrived empty, the from-source step ran (cloned and installed `spi-for-java` and `adapter-platform-integration`), `mvn install` without the settings file was green on Java 25 and 21, 3 min 43 s instead of about 1 min. The run started without a maintainer's approval |
+| Red at Spotless | [37220646960](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37220646960) | A misformatted `ZenBpmAdapter.java`: `spotless:check` failed on the core with "format violations"; no reports, so nothing uploaded |
+| Reports uploaded on a red run | [37220753137](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37220753137) | A deliberately failing test: the artifact `test-reports` (78 KB) holds its Surefire `.txt` and `.xml` |
+
+The ruleset on `main` (created 2026-10-04) requires `build` and a pull request.
 
 ### S1.3.2 Snapshot publication and coverage pages
 
