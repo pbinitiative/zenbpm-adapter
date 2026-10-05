@@ -5,8 +5,9 @@
 #
 # Proves what publish-snapshots.yaml relies on, without GitHub and without credentials:
 #
-#   1. A green build deploys exactly the published artifacts: the parent, the core, the Spring
-#      Boot module and the two Quarkus modules. Nothing of the test, report or gate modules.
+#   1. A green build deploys exactly the published files: the jar, the sources jar and the POM of
+#      the core, the Spring Boot module and the two Quarkus modules, and the parent's POM. No file
+#      missing, and nothing else, so nothing of the test, report or gate modules either.
 #   2. A red coverage gate deploys nothing at all, although every module before the gate built.
 #
 # Both runs work on a copy of the working tree (tracked and modified files) and deploy into a
@@ -35,11 +36,31 @@ deploy() {
     deploy) > "$log" 2>&1
 }
 
-expected="zenbpm-vanillabp-adapter
-zenbpm-vanillabp-adapter-parent
-zenbpm-vanillabp-adapter-quarkus
-zenbpm-vanillabp-adapter-quarkus-deployment
-zenbpm-vanillabp-adapter-spring-boot"
+# The published files, with the snapshot timestamp of each upload replaced by SNAPSHOT. A library
+# module publishes its jar, its sources jar and its POM, the parent its POM alone.
+expected="$(
+  for module in zenbpm-vanillabp-adapter zenbpm-vanillabp-adapter-quarkus \
+    zenbpm-vanillabp-adapter-quarkus-deployment zenbpm-vanillabp-adapter-spring-boot; do
+    echo "$module/$module-2.0.0-SNAPSHOT.jar"
+    echo "$module/$module-2.0.0-SNAPSHOT-sources.jar"
+    echo "$module/$module-2.0.0-SNAPSHOT.pom"
+  done
+  echo "zenbpm-vanillabp-adapter-parent/zenbpm-vanillabp-adapter-parent-2.0.0-SNAPSHOT.pom"
+)"
+expected="$(echo "$expected" | sort)"
+
+# Every file a deploy wrote below the groupId, except what Maven adds to each upload itself
+# (maven-metadata.xml and the checksums), as <artifactId>/<file name> with the timestamp of the
+# snapshot replaced by SNAPSHOT, so a missing or an additional artifact shows in the comparison.
+published_files() {
+  local repository="$1/org/pbinitiative/zenbpm"
+  [ -d "$repository" ] || return 0
+  find "$repository" -type f \
+    ! -name 'maven-metadata*' ! -name '*.md5' ! -name '*.sha1' ! -name '*.sha256' ! -name '*.sha512' \
+    -printf '%P\n' |
+    sed -E 's#^([^/]+)/[^/]+/#\1/#; s#-2\.0\.0-[0-9]{8}\.[0-9]{6}-[0-9]+#-2.0.0-SNAPSHOT#' |
+    sort
+}
 
 echo "1/2 green build: deploys exactly the published artifacts"
 copy_working_tree "$work/green-source"
@@ -48,15 +69,13 @@ if ! deploy "$work/green-source" "$work/green" "$work/green.log"; then
   echo "FAILED: the green build did not succeed, see the log above" >&2
   exit 1
 fi
-deployed="$(ls "$work/green/org/pbinitiative/zenbpm" | sort)"
+deployed="$(published_files "$work/green")"
 if [ "$deployed" != "$expected" ]; then
-  echo "FAILED: the green build deployed" >&2
-  echo "$deployed" >&2
-  echo "instead of" >&2
-  echo "$expected" >&2
+  echo "FAILED: the green build did not deploy exactly the published files:" >&2
+  diff <(echo "$expected") <(echo "$deployed") | sed -n 's/^< /    missing:    /p; s/^> /    unexpected: /p' >&2
   exit 1
 fi
-echo "    ok: $(echo "$deployed" | tr '\n' ' ')"
+echo "    ok: $(echo "$deployed" | wc -l) files, the jar, sources jar and POM of four modules and the parent POM"
 
 echo "2/2 red coverage gate: deploys nothing"
 copy_working_tree "$work/red-source"

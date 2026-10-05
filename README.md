@@ -177,8 +177,9 @@ deferred until the gate, the last module, has passed, and each coverage badge's 
 report this build wrote.
 
 `bin/check-deploy-safety.sh` proves the deferred deploy itself, without GitHub: it deploys a copy of
-the working tree into a local directory (exactly the parent, the core, `spring-boot`, `quarkus` and
-`quarkus-deployment` have to arrive), then adds an untested method to the copy and checks that the
+the working tree into a local directory (exactly the jar, sources jar and POM of the core,
+`spring-boot`, `quarkus` and `quarkus-deployment` and the parent's POM have to arrive, no file
+missing and none more), then adds an untested method to the copy and checks that the
 red gate leaves the directory empty. It installs nothing into the local Maven repository. Run it
 after changing anything about deploying, the module order or the gate.
 
