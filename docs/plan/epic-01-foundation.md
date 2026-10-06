@@ -333,6 +333,15 @@ written here as well):
 
 `Checks` on the same commit (run 37420738324) is green as well.
 
+A consumer was simulated on 2026-10-06 as well: a throw-away project depending on
+`zenbpm-vanillabp-adapter-spring-boot` and `zenbpm-vanillabp-adapter-quarkus` `2.0.0-SNAPSHOT`, an
+empty local Maven repository, and the `settings.xml` of the README's section "Using the snapshots"
+plus the two VanillaBP registries, with a token carrying `read:packages`. 113 dependencies resolved;
+the adapter's three artifacts came from its own registry, the VanillaBP ones from VanillaBP's, and
+no parent POM of the adapter was needed. The snippet had the repository's releases switched on,
+which made Maven ask GitHub Packages for every release dependency first (1,317 refused lookups, six
+minutes); with releases switched off, as the README now shows, the same resolve took one minute.
+
 ---
 
 ## F1.2 Engine test infrastructure

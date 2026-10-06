@@ -105,6 +105,9 @@ token to its Maven `settings.xml`:
           <snapshots>
             <enabled>true</enabled>
           </snapshots>
+          <releases>
+            <enabled>false</enabled>
+          </releases>
         </repository>
       </repositories>
     </profile>
@@ -115,9 +118,15 @@ token to its Maven `settings.xml`:
 </settings>
 ```
 
+Releases stay switched off for this repository on purpose. A repository of the settings is asked
+before Maven Central, so without it every release dependency is first looked up in GitHub Packages
+and refused: measured on 2026-10-06, resolving this adapter from an empty local repository took six
+minutes with 1,317 such refusals, and one minute without them.
+
 The adapter builds on VanillaBP's own snapshots, which live in VanillaBP's GitHub Packages in the
-same way. Until VanillaBP 2.0 is released, a consumer needs those two registries as well, see
-`.github/workflows/settings.xml` for their addresses.
+same way. Until VanillaBP 2.0 is released, a consumer needs those two registries as well, with the
+same server credentials and releases switched off, see `.github/workflows/settings.xml` for their
+addresses.
 
 ## Contributing
 
