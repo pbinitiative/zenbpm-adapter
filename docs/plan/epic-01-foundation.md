@@ -301,9 +301,9 @@ The ruleset on `main` (created 2026-10-04) requires `build` and a pull request.
 
 **Acceptance criteria**
 
-- [ ] After a push to `main`, `zenbpm-vanillabp-adapter-parent:2.0.0-SNAPSHOT` is listed under the
+- [x] After a push to `main`, `zenbpm-vanillabp-adapter-parent:2.0.0-SNAPSHOT` is listed under the
   repository's Packages and both report pages answer.
-- [ ] The badges render on the README.
+- [x] The badges render on the README.
 - [x] A red coverage gate publishes nothing. Proven before the merge with
   `mvn deploy -DaltDeploymentRepository=github::file://...` and an untested method in the core: the
   build failed at the gate and the target directory stayed empty, while the green build deployed
@@ -318,6 +318,20 @@ The ruleset on `main` (created 2026-10-04) requires `build` and a pull request.
   merge). `PublicationSafetyTest` repeats the local half on every build, with each badge's
   expression taken from the README: `94%`, `0%` and `n/a` footers, and the report the build just
   wrote.
+
+**Done 2026-10-06**, merged to `main` as `40eddd2` (pull request #5, after two reviews and
+CodeRabbit). The first publication, run
+[37420738285](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37420738285)
+of `Publish snapshots` on that commit (GitHub keeps run logs for 90 days, so what it showed is
+written here as well):
+
+| Criterion | What showed it |
+|---|---|
+| Snapshot published | Job `publish` green in 1 min 42 s; Maven logged "Deferring deploy ... at end" for exactly the parent, the core, `spring-boot`, `quarkus` and `quarkus-deployment`, the gate's two lines ("the report holds no instruction"), then `BUILD SUCCESS`. The repository's Packages page lists exactly those five packages (`org.pbinitiative.zenbpm.zenbpm-vanillabp-adapter`, `-parent`, `-spring-boot`, `-quarkus`, `-quarkus-deployment`) |
+| Both report pages answer | Job `deploy-coverage-reports` green; `.../spring-boot-report/index.html` and `.../quarkus-report/index.html` under `https://pbinitiative.github.io/zenbpm-vanillabp-adapter/` answer HTTP 200 |
+| The badges render | shields.io renders "Coverage Spring Boot: n/a" and "Coverage Quarkus: n/a", the value of a report without an instruction |
+
+`Checks` on the same commit (run 37420738324) is green as well.
 
 ---
 
