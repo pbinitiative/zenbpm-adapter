@@ -1,0 +1,113 @@
+name: Publish snapshots
+# Every push to main publishes what was merged: the artifacts as 2.0.0-SNAPSHOT to this
+# repository's GitHub Packages, and both coverage reports to GitHub Pages, where the README's
+# badges read them. checks.yaml runs on the same push and answers whether main is green; this
+# workflow builds once more because its build is the one which uploads.
+"on":
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  # Two pushes to main must not publish at the same time, and a running publish is not
+  # cancelled: stopped during the deferred upload, it would leave a mixed set behind, with the
+  # maven-metadata.xml of some modules pointing at the new build and of others at the old one.
+  # A run still WAITING in this group is replaced by a newer push, which is harmless: the newer
+  # push carries the newer artifacts. The ref is part of the group, so a dispatch on another
+  # branch, whose job is skipped below, queues in a group of its own and can never replace a
+  # waiting run of main.
+  group: publish-snapshots-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    # A dispatch may name any branch which carries this file. Only main publishes the snapshot
+    # consumers resolve, so on another branch this job is skipped rather than overwrite it with
+    # unreviewed code (and the concurrency group above keeps such a run out of main's queue). (The Pages job below would be refused anyway: its environment accepts
+    # main only.)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      # uploads the snapshots
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # the same JDK as the required check of checks.yaml; the classes target Java 21
+      - uses: actions/setup-java@v6
+        with:
+          java-version: 25.0.4+101.0.LTS
+          distribution: temurin
+          cache: maven
+      # No login to ghcr.io here, unlike checks.yaml: in this job the GITHUB_TOKEN may write
+      # packages, and a login would leave it in ~/.docker/config.json for every later step. No
+      # test pulls the engine image yet; when the integration tests do, a pull without login
+      # only meets the anonymous rate limit.
+      #
+      # This workflow only runs on main, never for a fork, so the token reading the VanillaBP
+      # snapshots has to be there. Without it the build below would fail on the first VanillaBP
+      # dependency with a message about a 401, which says nothing about the cause.
+      - name: Make sure the package token is there
+        env:
+          USER: "${{ secrets.VANILLABP_PACKAGES_USER }}"
+          TOKEN: "${{ secrets.VANILLABP_PACKAGES_TOKEN }}"
+        run: |
+          if [ -z "$USER" ] || [ -z "$TOKEN" ]; then
+            echo "::error::The repository secrets VANILLABP_PACKAGES_USER and VANILLABP_PACKAGES_TOKEN are missing. Set them under Settings > Secrets and variables > Actions to a GitHub user name and a classic token of that user with 'read:packages', see the README, section 'Contributing'."
+            exit 1
+          fi
+      # One 'mvn deploy' builds, tests and gates everything, and uploads only at the end: the
+      # root POM sets 'deployAtEnd', so a red coverage gate in the last module leaves nothing
+      # published. The two VanillaBP secrets read the platform's snapshots, GITHUB_TOKEN writes
+      # this repository's (server 'github' in settings.xml). The VanillaBP secrets reach this
+      # step only; the GITHUB_TOKEN otherwise goes to actions/checkout alone, which does not
+      # keep it (persist-credentials: false).
+      - name: Build, test and publish the snapshots
+        env:
+          VANILLABP_PACKAGES_USER: "${{ secrets.VANILLABP_PACKAGES_USER }}"
+          VANILLABP_PACKAGES_TOKEN: "${{ secrets.VANILLABP_PACKAGES_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: mvn -s "$GITHUB_WORKSPACE/.github/workflows/settings.xml"
+          --batch-mode --no-transfer-progress --update-snapshots deploy
+      - name: Collect the coverage reports
+        run: |
+          mkdir -p coverage
+          cp -r test-coverage-report/spring-boot/report coverage/spring-boot-report
+          cp -r test-coverage-report/quarkus/report coverage/quarkus-report
+      - name: Hand the coverage reports to GitHub Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: coverage
+      - name: Upload the reports of a failed build
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/failsafe-reports/**
+            **/target/site/jacoco*/**
+            test-coverage-report/*/report/**
+          retention-days: 7
+          if-no-files-found: warn
+
+  # A job of its own because deploying to Pages needs the token permissions 'pages' and
+  # 'id-token', which the build and its third-party plugins never get.
+  deploy-coverage-reports:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy the coverage reports to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

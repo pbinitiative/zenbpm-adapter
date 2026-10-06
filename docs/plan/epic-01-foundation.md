@@ -107,13 +107,16 @@ wiki sentence promising behaviour names the test which holds it.
 
 **Acceptance criteria**
 
-- [ ] `mvn install` is green from a clean local repository which holds `spi-for-java` and
+- [x] `mvn install` is green from a clean local repository which holds `spi-for-java` and
   `adapter-platform-integration` installed.
-- [ ] `mvn spotless:check` passes; a deliberately misformatted file fails the build.
-- [ ] Both coverage reports and the gate module exist and run.
-- [ ] `META-INF/vanillabp/adapter-zenbpm.properties` in the built core jar carries resolved values.
-- [ ] `DECISIONS.md`, `GAPS.md`, `AGENTS.md`, `README.md`, `UPGRADE.md`, `NOTICE`,
+- [x] `mvn spotless:check` passes; a deliberately misformatted file fails the build.
+- [x] Both coverage reports and the gate module exist and run.
+- [x] `META-INF/vanillabp/adapter-zenbpm.properties` in the built core jar carries resolved values.
+- [x] `DECISIONS.md`, `GAPS.md`, `AGENTS.md`, `README.md`, `UPGRADE.md`, `NOTICE`,
   `LICENSE-APACHE-2.0` exist with the content above.
+
+**Done 2026-10-05**, merged to `main` as `e403ac6` (pull request #2, together with S1.3.1 and the
+answers to two reviews). Checked locally on JDK 25 and JDK 21 and in CI.
 
 ### S1.1.2 Finish the workspace membership, locally
 
@@ -130,9 +133,11 @@ CI (`update-submodules.yml`) never sees them, and a recursive clone of the works
 them. Everything below stays an uncommitted change of the local workspace, as the root `AGENTS.md`
 and the two `zenbpm-*` skills already are.
 
-1. Local `.gitmodules`: both pbinitiative entries say `branch = master`, but the default branch of
-   `zenbpm` and of `zenbpm-vanillabp-adapter` is `main`. Change both to `main`, so the file does not
-   say something wrong, even though no `git submodule` command uses the entries yet.
+1. Local `.gitmodules`: no entries for the pbinitiative repositories. Entries without a gitlink do
+   nothing for `git submodule`, but as an uncommitted edit of a tracked file they would be picked up
+   by `git commit -a` and would stop `git pull` whenever the superproject changes `.gitmodules`. The
+   root `AGENTS.md` documents the local members instead. (Written first as "change both entries to
+   `branch = main`"; dropped after the review of 2026-10-05.)
 2. Wiki: clone `git@github.com:pbinitiative/zenbpm-vanillabp-adapter.wiki.git` next to the adapter
    as `zenbpm-vanillabp-adapter.wiki/` (the wiki exists since 2026-10-04 with a `Home` page). The
    top-level `/*` ignores it like the adapter.
@@ -160,14 +165,26 @@ and the two `zenbpm-*` skills already are.
 
 **Acceptance criteria**
 
-- [ ] `git status` of the superproject shows no new tracked path and no gitlink for either
+- [x] `git status` of the superproject shows no new tracked path and no gitlink for either
   pbinitiative repository; `git -C zenbpm-vanillabp-adapter pull` advances the adapter on `main`.
-- [ ] The local `.gitmodules` names `main` for both pbinitiative entries.
-- [ ] `zenbpm-vanillabp-adapter.wiki/` is checked out and ignored by the superproject.
-- [ ] Where the devcontainer config was changed, it builds the adapter after the platform (verify by
+- [x] The local `.gitmodules` has no pbinitiative entries (`git diff .gitmodules` is empty).
+- [x] `zenbpm-vanillabp-adapter.wiki/` is checked out and ignored by the superproject.
+- [x] Where the devcontainer config was changed, it builds the adapter after the platform (verify by
   reading the config; a spawn is optional).
-- [ ] Both skill changes are drafted locally; the "built on PEA" sentence is gone or marked
+- [x] Both skill changes are drafted locally; the "built on PEA" sentence is gone or marked
   superseded in the local copy.
+
+**Done 2026-10-05** in the maintainer's workspace, nothing committed to the superproject:
+`.gitmodules` is the superproject's own again, without pbinitiative entries; the wiki (one `Home`
+page) is cloned and ignored by the top-level `/*`; the root `AGENTS.md` (itself an ignored local
+file) names the adapter and its wiki as local members; the devcontainer config was left unchanged
+(optional step, not used). `.gitignore` stays as the superproject has it: the only local ignores,
+the two `zenbpm-*` skills, are in `.git/info/exclude`, which git never commits. The repository's
+default workflow token permission was set to `read` the same day (both workflows declare their own).
+In the skills, `vanillabp-bpms-characteristics` has a ZenBPM section and cheat-sheet column with the
+facts of `analysis/01-zenbpm-capabilities.md`, and `vanillabp-adapter-building` names the
+repository, its organisation and groupId and the raw-XML model type. The "built on the PEA adapter"
+sentence had already been replaced upstream by "native, like the Camunda adapters".
 
 ---
 
@@ -223,14 +240,26 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
 
 **Acceptance criteria**
 
-- [ ] A pull request with the S1.1.1 skeleton is green on a runner with an empty Maven cache,
+- [x] A pull request with the S1.1.1 skeleton is green on a runner with an empty Maven cache,
   without building the VanillaBP snapshots from source. The log cannot show the downloads (the build
   runs with `--no-transfer-progress`), but no `io.vanillabp` `2.0.0-SNAPSHOT` exists on Maven
   Central, so such a run can only have read them from `maven.pkg.github.com` with the token.
-- [ ] The fork path (no package token) is green: proven by a pull request from a fork.
-- [ ] A deliberately misformatted file on a branch turns the check red at the Spotless step.
-- [ ] The failure artifact is uploaded on a red run (prove it once with the misformatted branch plus a
+- [x] The fork path (no package token) is green: proven by a pull request from a fork.
+- [x] A deliberately misformatted file on a branch turns the check red at the Spotless step.
+- [x] The failure artifact is uploaded on a red run (prove it once with the misformatted branch plus a
   failing test).
+
+**Done 2026-10-05**, merged with S1.1.1. The evidence, one run per criterion (GitHub keeps run logs
+for 90 days, so what each run showed is written here as well):
+
+| Criterion | Run | What it showed |
+|---|---|---|
+| Green on an empty Maven cache with the token | [37218953892](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37218953892) | `maven cache is not found`, no from-source step in that revision, `BUILD SUCCESS`: the snapshots came from GitHub Packages |
+| Fork path | [37353630927](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37353630927) | Pull request #4 from the fork `alisku/zenbpm-vanillabp-adapter`: the package token arrived empty, the from-source step ran (cloned and installed `spi-for-java` and `adapter-platform-integration`), `mvn install` without the settings file was green on Java 25 and 21, 3 min 43 s instead of about 1 min. The run started without a maintainer's approval |
+| Red at Spotless | [37220646960](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37220646960) | A misformatted `ZenBpmAdapter.java`: `spotless:check` failed on the core with "format violations"; no reports, so nothing uploaded |
+| Reports uploaded on a red run | [37220753137](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/runs/37220753137) | A deliberately failing test: the artifact `test-reports` (78 KB) holds its Surefire `.txt` and `.xml` |
+
+The ruleset on `main` (created 2026-10-04) requires `build` and a pull request.
 
 ### S1.3.2 Snapshot publication and coverage pages
 
@@ -239,27 +268,56 @@ appear), E11 (nightly and native), E12 (release) and E13 (a trigger from the eng
 **Instructions**
 
 1. `.github/workflows/publish-snapshots.yaml`, `on: push: {branches: [main]}` and
-   `workflow_dispatch`,
-   `permissions: {contents: read, packages: write, pages: write, id-token: write}`: build as in
-   S1.3.1, then `mvn -B -s .github/workflows/settings.xml deploy -DskipTests` to
+   `workflow_dispatch`, `permissions: contents: read` at the top, `concurrency` that does not cancel
+   a running publish (a cancelled upload would leave the modules' metadata pointing at different
+   builds; a run still waiting is replaced by a newer push, which is harmless; the group carries the
+   ref, so a dispatch on another branch never replaces a waiting run of `main`). Job `publish` runs
+   on `main` only, also when dispatched (`if: github.ref == 'refs/heads/main'`), with `packages:
+   write`, `timeout-minutes: 45`, checkout without persisted credentials and the JDK of
+   `checks.yaml`, but no ghcr.io login: in this job the token may write packages, and no test pulls
+   the engine image yet (S1.2.1 adds the first one and decides on the login there). A step fails
+   with a message naming the two secrets when either is missing, then ONE `mvn -s
+   .github/workflows/settings.xml --update-snapshots deploy`. The root POM pins
+   `maven-deploy-plugin` 3.1.4 with `deployAtEnd`, so nothing is uploaded unless the last module,
+   the coverage gate, passed (instead of the plan's earlier `install` followed by `deploy
+   -DskipTests`, which builds twice and still uploads per module). The target is
    `https://maven.pkg.github.com/pbinitiative/zenbpm-vanillabp-adapter` (the
-   `distributionManagement` of the root POM names it; the `GITHUB_TOKEN` authenticates through a
-   second `<server id="github">` in the same settings file), then publish
+   `distributionManagement` of the root POM), authenticated with the `GITHUB_TOKEN` through a second
+   `<server id="github">` in the settings file; the VanillaBP secrets reach that one step only, the
+   `GITHUB_TOKEN` otherwise only `actions/checkout`, which does not keep it. Then
    `test-coverage-report/spring-boot/report` and the Quarkus twin (the `outputDirectory` of both
-   report POMs, not `target/site`) to GitHub
-   Pages as `spring-boot-report/` and `quarkus-report/` (`actions/upload-pages-artifact` +
-   `actions/deploy-pages`, Pages source "GitHub Actions").
+   report POMs, not `target/site`) go to GitHub Pages as `spring-boot-report/` and `quarkus-report/`
+   (`actions/upload-pages-artifact`, and `actions/deploy-pages` in a second job which alone gets
+   `pages: write` and `id-token: write`; Pages source "GitHub Actions", the `github-pages`
+   environment accepts `main` only).
 2. The README gets the two coverage badges reading
    `https://pbinitiative.github.io/zenbpm-vanillabp-adapter/spring-boot-report/index.html` and
-   `.../quarkus-report/index.html` with the regex of the Camunda 8 badges.
+   `.../quarkus-report/index.html`. Not with the regex of the Camunda 8 badges: that one needs a
+   number followed by `%` and finds nothing while a report holds no instruction (JaCoCo writes
+   `n/a`). The badge reads the first column after `Total` instead, which is instruction coverage and
+   is either `NN%` or `n/a`.
 3. Consumers of the snapshot need the same kind of token for `pbinitiative`'s packages; the README's
-   coordinates section says so and shows the `settings.xml` snippet.
+   section "Using the snapshots" says so and shows the `settings.xml` snippet.
 
 **Acceptance criteria**
 
 - [ ] After a push to `main`, `zenbpm-vanillabp-adapter-parent:2.0.0-SNAPSHOT` is listed under the
   repository's Packages and both report pages answer.
 - [ ] The badges render on the README.
+- [x] A red coverage gate publishes nothing. Proven before the merge with
+  `mvn deploy -DaltDeploymentRepository=github::file://...` and an untested method in the core: the
+  build failed at the gate and the target directory stayed empty, while the green build deployed
+  the parent, the core, `spring-boot`, `quarkus` and `quarkus-deployment` (jar, sources jar, POM)
+  and nothing of the test, report and gate modules. Repeatable since: `bin/check-deploy-safety.sh`
+  does both runs on a copy of the working tree (16 s), and `PublicationSafetyTest` fails every build
+  in which `deployAtEnd` or the gate's place as the last module is gone. Both were seen to fail with
+  `deployAtEnd` switched off: the script found the core's jar, sources jar and POM deployed by a
+  red build.
+- [x] The badge regex reads `94%` from the live Camunda 8 report through shields.io, and `0%` and
+  `n/a` from a report of this repository with and without an instruction (checked before the
+  merge). `PublicationSafetyTest` repeats the local half on every build, with each badge's
+  expression taken from the README: `94%`, `0%` and `n/a` footers, and the report the build just
+  wrote.
 
 ---
 
@@ -311,7 +369,11 @@ one commit. When the engine tags a release containing the pinned commit, the pin
    `SuppressOutputExtension`.
 4. A `logback-test.xml` template quieting `org.testcontainers`, `tc`, `com.github.dockerjava` at WARN,
    to be copied into every module with ITs.
-5. One IT in `engine-test-support` itself: `EngineUnderTestIT` boots the container and asserts
+5. The first test pulling `ghcr.io/pbinitiative/zenbpm` arrives with this story. `checks.yaml` logs
+   in to ghcr.io already; `publish-snapshots.yaml` deliberately does not (its token may write
+   packages, see S1.3.2). Decide in this story whether its anonymous pull is enough or whether it
+   gets a login with a token which can only read.
+6. One IT in `engine-test-support` itself: `EngineUnderTestIT` boots the container and asserts
    `/system/health/ready` answers 200 and that `git.commitId` of `/system/status` (the engine
    reports the commit shortened) is a prefix of `zenbpm.commit`. Not `build.version`: on `main` it
    names the last release's `VERSION` and cannot tell two `main` builds apart.

@@ -24,8 +24,9 @@ this adapter cannot do what it asks, the gap belongs in [`GAPS.md`](./GAPS.md).
 built from the VanillaBP repositories or resolved from VanillaBP's GitHub Packages. Then:
 
 ```bash
-mvn install           # install alone: it runs every phase verify has
-mvn spotless:apply    # before every commit; Spotless fails the build on violations
+mvn install                   # install alone: it runs every phase verify has
+mvn spotless:apply            # before every commit; Spotless fails the build on violations
+bin/check-deploy-safety.sh    # after touching deploying, module order or the coverage gate
 ```
 
 ## Licence headers

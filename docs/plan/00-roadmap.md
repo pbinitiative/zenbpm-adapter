@@ -49,7 +49,7 @@ where the dependency is not simply the previous one.
 | # | Story | Epic | Increment proven by |
 |---|---|---|---|
 | 1 | S1.1.1 Repository skeleton | E1 | `mvn install` green on an empty core, coverage gate present |
-| 2 | S1.1.2 Workspace membership, locally | E1 | local `.gitmodules` on `main`, wiki checked out, skill drafts; nothing committed to the superproject |
+| 2 | S1.1.2 Workspace membership, locally | E1 | wiki checked out, local `AGENTS.md` and skill drafts; nothing committed to the superproject, no `.gitmodules` entries |
 | 3 | S1.3.1 Pull-request check | E1 | a green check on GitHub resolving `io.vanillabp:*` from VanillaBP's packages, Spotless red on a misformatted branch |
 | 4 | S1.3.2 Snapshot publication and coverage pages | E1 | `2.0.0-SNAPSHOT` in pbinitiative's packages, both report pages and badges live |
 | 5 | S1.2.1 Pinned engine contract and container helper | E1 | a test starts the engine image and reads `/system/health/ready` |

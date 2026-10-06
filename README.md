@@ -2,6 +2,8 @@
 
 [![Checks](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/workflows/checks.yaml/badge.svg?branch=main)](https://github.com/pbinitiative/zenbpm-vanillabp-adapter/actions/workflows/checks.yaml)
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Coverage Spring Boot](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fpbinitiative.github.io%2Fzenbpm-vanillabp-adapter%2Fspring-boot-report%2Findex.html&search=Total%3C%2Ftd%3E%3Ctd%20class%3D%22bar%22%3E%5B%5E%3C%5D%2A%3C%2Ftd%3E%3Ctd%20class%3D%22ctr2%22%3E%28%5B%5E%3C%5D%2B%29%3C&replace=%241&label=Coverage%20Spring%20Boot&color=green&cacheSeconds=60)](https://pbinitiative.github.io/zenbpm-vanillabp-adapter/spring-boot-report/index.html)
+[![Coverage Quarkus](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fpbinitiative.github.io%2Fzenbpm-vanillabp-adapter%2Fquarkus-report%2Findex.html&search=Total%3C%2Ftd%3E%3Ctd%20class%3D%22bar%22%3E%5B%5E%3C%5D%2A%3C%2Ftd%3E%3Ctd%20class%3D%22ctr2%22%3E%28%5B%5E%3C%5D%2B%29%3C&replace=%241&label=Coverage%20Quarkus&color=green&cacheSeconds=60)](https://pbinitiative.github.io/zenbpm-vanillabp-adapter/quarkus-report/index.html)
 
 This is the [VanillaBP](https://www.vanillabp.io) adapter for the
 [ZenBPM](https://github.com/pbinitiative/zenbpm) engine (VanillaBP Version 2). It lets a VanillaBP
@@ -66,6 +68,57 @@ Working rules for this repository, for people and coding agents alike, are in
 [`DECISIONS.md`](./DECISIONS.md), what the engine cannot do and how the adapter answers it in
 [`GAPS.md`](./GAPS.md).
 
+## Using the snapshots
+
+Every push to `main` publishes the artifacts as `2.0.0-SNAPSHOT` to this repository's GitHub
+Packages (`.github/workflows/publish-snapshots.yaml`), for example:
+
+```xml
+<dependency>
+  <groupId>org.pbinitiative.zenbpm</groupId>
+  <artifactId>zenbpm-vanillabp-adapter-spring-boot</artifactId>
+  <version>2.0.0-SNAPSHOT</version>
+</dependency>
+```
+
+The Quarkus extension is `zenbpm-vanillabp-adapter-quarkus`. GitHub Packages asks for credentials
+even for a public package, and its Maven registry accepts only a classic personal access token: any
+GitHub account's classic token with `read:packages` works. A consumer adds the registry and the
+token to its Maven `settings.xml`:
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>zenbpm-vanillabp-adapter</id>
+      <username>YOUR_GITHUB_USER</username>
+      <password>YOUR_CLASSIC_TOKEN</password>
+    </server>
+  </servers>
+  <profiles>
+    <profile>
+      <id>zenbpm-vanillabp-adapter</id>
+      <repositories>
+        <repository>
+          <id>zenbpm-vanillabp-adapter</id>
+          <url>https://maven.pkg.github.com/pbinitiative/zenbpm-vanillabp-adapter</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>zenbpm-vanillabp-adapter</activeProfile>
+  </activeProfiles>
+</settings>
+```
+
+The adapter builds on VanillaBP's own snapshots, which live in VanillaBP's GitHub Packages in the
+same way. Until VanillaBP 2.0 is released, a consumer needs those two registries as well, see
+`.github/workflows/settings.xml` for their addresses.
+
 ## Contributing
 
 Every pull request and every push to `main` runs `.github/workflows/checks.yaml`: one `mvn install`,
@@ -96,6 +149,12 @@ of their default branch instead, which takes a few minutes longer.
 1. **Spring Boot** (core + Spring Boot integration) - into `test-coverage-report/spring-boot/report`
 2. **Quarkus** (core + Quarkus extension) - into `test-coverage-report/quarkus/report`
 
+Every push to `main` publishes both to GitHub Pages, as
+[`spring-boot-report`](https://pbinitiative.github.io/zenbpm-vanillabp-adapter/spring-boot-report/index.html)
+and [`quarkus-report`](https://pbinitiative.github.io/zenbpm-vanillabp-adapter/quarkus-report/index.html).
+The two coverage badges at the top read the instruction coverage from those pages, the number the
+gate below compares. While the core compiles no code yet they show `n/a`, as the reports do.
+
 Coverage is measured separately per platform, because a platform's tests never cover the other
 platform's code.
 
@@ -113,7 +172,16 @@ failing it. All of these are `CoverageGateTest`; the failure paths of the last o
 `ProductionModulesTest`. The conventions every test class of this repository follows are checked by
 `TestClassConventionsTest`, what the published POMs hand an application by `PublishedPomsTest`, and
 that every published jar and sources jar carries `LICENSE`, `LICENSE-APACHE-2.0` and `NOTICE` by
-`PublishedJarsTest`.
+`PublishedJarsTest`. `PublicationSafetyTest` keeps the snapshot publication honest: the deploy is
+deferred until the gate, the last module, has passed, and each coverage badge's expression reads the
+report this build wrote.
+
+`bin/check-deploy-safety.sh` proves the deferred deploy itself, without GitHub: it deploys a copy of
+the working tree into a local directory (exactly the jar, sources jar and POM of the core,
+`spring-boot`, `quarkus` and `quarkus-deployment` and the parent's POM have to arrive, no file
+missing and none more), then adds an untested method to the copy and checks that the
+red gate leaves the directory empty. It installs nothing into the local Maven repository. Run it
+after changing anything about deploying, the module order or the gate.
 
 The gate reports what it measured on every run, green ones included. The angle brackets stand for
 the numbers of the run:
